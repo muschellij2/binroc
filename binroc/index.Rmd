@@ -1,0 +1,174 @@
+---
+author:
+  - name: John Muschelli
+    affiliation: Department of Biostatistics, Johns Hopkins Bloomberg School of Public Health
+    address: >
+      615 N Wolfe St
+      Baltimore, MD 21205
+    email: \email{jmuschel@jhsph.edu}
+    url: http://johnmuschelli.
+title:
+  formatted: "ROC and AUC in R with a Single Binary Predictor"
+  # If you use tex in the formatted title, also supply version without
+  plain:     "ROC and AUC in R with a Single Binary Predictor"
+  # For running headers, if needed
+  short:     "Single Binary Predictor ROC"
+abstract: >
+  The abstract of the article.
+keywords:
+  # at least one keyword must be supplied
+  formatted: [roc, auc, area under the curve, "\\proglang{R}"]
+  plain:     [roc, auc, area under the curve, R]
+preamble: >
+  \usepackage{amsmath}
+output: rticles::jss_article
+bibliography: binroc.bib
+
+---
+
+# Introduction
+
+
+This template demonstrates some of the basic latex you'll need to know to create a JSS article.
+
+## Code formatting
+
+Don't use markdown, instead use the more precise latex commands:
+
+* \proglang{Java}
+* \pkg{plyr}
+* \code{print("abc")}
+
+# Simple Example
+
+```{r create_tab}
+x = c(rep(0, 52), rep(1, 32),
+      rep(0, 35), rep(1, 50))
+y = c(rep(0, 84), rep(1, 85))
+tab = table(x, y)
+tab
+```
+
+
+As there are only two outcomes for $X$, we can expand the probability using the law of total probability:
+\begin{align}
+P(X_{1} > X_{0}) &= P(X_{1} > X_{0} | X_{1} = 1) P(X_{1} = 1) \nonumber \\
+&+ P(X_{1} > X_{0} | X_{1} = 0) P(X_{1} = 0) \label{eq:expand1} \\
+&= P(X_{1} > X_{0} | X_{1} = 1) P(X_{1} = 1) \label{eq:expand}
+\end{align}
+where the second term of equation \eqref{eq:expand1} is equal to zero because $X_{0} \in \{0, 1\}$.  
+
+Here we see that the second term of equation \eqref{eq:expand} is the sensitivity:
+\begin{align*}
+P(X_{1} = 1) &= P(X = 1 | Y = 1)\\
+&= \frac{TP}{TP + FN} \\
+&= \text{sensitivity}
+\end{align*}
+
+Here we show the first term of equation \eqref{eq:expand} is the specificity:
+\begin{align*}
+P(X_{1} > X_{0} | X_{1} = 1) &= P(X_{1} > X_{0} | X_{1} = 1, X_{0} =1) P(X_{0} = 1) \\
+&+ P(X_{1} > X_{0} | X_{1} = 1, X_{0} =0) P(X_{0} = 0) \\
+&= P(X_{1} > X_{0} | X_{1} = 1, X_{0} =0) P(X_{0} = 0) \\
+&= P(X_{0} = 0) \\
+&= P(X = 0 | Y = 0)\\
+&= \frac{TN}{TN + FP} \\
+&= \text{specificity}
+\end{align*}
+
+Therefore, we combine these two to show that equation \eqref{eq:expand} reduces to:
+$$
+P(X_{1} > X_{0}) = \text{specificity} * \text{sensitivity}
+$$
+
+
+Therefore, the true AUC should be equal to:
+```{r}
+sens = tab[2,2] / sum(tab[,2])
+spec = tab[1,1] / sum(tab[,1])
+true_auc = sens * spec
+print(true_auc)
+```
+
+```{r}
+fpr = 1-spec
+area_of_tri = 1/2 * sens * fpr
+area_of_quad = sens * spec + 1/2 * spec * (1-sens)
+auc = area_of_tri + area_of_quad
+```
+
+```{r, echo = FALSE}
+n = 1000000
+```
+
+We can also show that if we use a simple sampling method, we can estimate this true AUC.  Here, the function \code{est_auc} samples `r n` random samples from $X_{1}$ and $X_{0}$, then calculates $\hat{P}(X_{1} > X_{0})$:
+
+```{r}
+est_auc = function(x, y) {
+  x1 = x[y == 1]
+  x0 = x[y == 0]
+  n = 1000000
+  c1 = sample(x1, size = n, replace = TRUE)
+  c0 = sample(x0, size = n, replace = TRUE)
+  mean(c1 > c0)
+}
+sample_est_auc = est_auc(x, y)
+sample_est_auc
+```
+
+
+
+# Current Implementations
+
+## R
+
+### ROCR Package
+
+The \pkg{ROCR} package is one of the most popular packages for doing ROC analysis \cite{ROCR}.  Using \code{prediction} and \code{performance} functions, we see that the estimated AUC is much higher than the true AUC:
+
+```{r}
+library(ROCR)
+
+pred = prediction(x, y)
+auc_est = performance(pred, "auc")
+auc_est@y.values[[1]]
+```
+
+Looking at the plot for the ROC curve in ROCR, we can see why this may be:
+```{r, eval = FALSE, echo = TRUE}
+par(mfrow = c(1, 2))
+perf = performance(pred, "tpr", "fpr")
+plot(perf)
+abline(a = 0, b = 1)
+plot(perf, type = "s")
+abline(a = 0, b = 1)
+```
+
+```{r, echo = FALSE, fig.width=10, fig.height=5}
+par(mfrow = c(1, 2), oma = c(0, 0, 0, 0), mar = c(5, 4.1, 0, 0))
+perf = performance(pred, "tpr", "fpr")
+plot(perf)
+verts = cbind(x = c(0, 1 - spec, 1 - spec), y = c(0, sens, 0))
+polygon(verts, col = "orange", border = FALSE)
+verts = cbind(x = c(1 - spec, 1, 1), y = c(sens, 1, sens))
+polygon(verts, col = "firebrick", border = FALSE)
+rect(xleft = 1 - spec, xright = 1, ybottom = 0, ytop = sens, col = "deepskyblue3", border = FALSE)
+lines(perf@x.values[[1]], perf@y.values[[1]], lwd = 2)
+# rect(xleft = 0, ybottom =0, xright= 1-spec, ytop = sens, col = "red")
+# rect(xleft = 1 - spec, ybottom = sens, xright= 1, ytop = 1, col = "blue")
+abline(a = 0, b = 1,  col = "gray",lty = "dashed")
+plot(perf@x.values[[1]], perf@y.values[[1]], type = "s", ylab = "", xlab = "False positive rate")
+rect(xleft = 1 - spec, xright = 1, ybottom = 0, ytop = sens, col = "deepskyblue3", border = FALSE)
+lines(perf@x.values[[1]], perf@y.values[[1]], lwd = 2, type = "s")
+abline(a = 0, b = 1, col = "gray", lty = "dashed")
+```
+
+Looking geometrically at the plot, we can see how 
+```{r}
+fpr = 1 - spec
+area_of_left_tri = 1/2 * sens * fpr
+area_of_top_tri = 1/2 * spec * (1 - sens)
+false_auc = area_of_left_tri + true_auc + area_of_top_tri
+false_auc
+```
+
