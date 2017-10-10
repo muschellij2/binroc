@@ -184,7 +184,7 @@ R> sample_est_auc
 \end{CodeInput}
 
 \begin{CodeOutput}
-[1] 0.364464
+[1] 0.365062
 \end{CodeOutput}
 \end{CodeChunk}
 
@@ -340,6 +340,20 @@ Area under the curve: 0.6036
 
 \end{CodeChunk}
 
+\begin{CodeChunk}
+
+
+\begin{center}\includegraphics{index_files/figure-latex/unnamed-chunk-15-1} \end{center}
+
+\end{CodeChunk}
+
+\begin{CodeChunk}
+
+
+\begin{center}\includegraphics{index_files/figure-latex/unnamed-chunk-16-1} \end{center}
+
+\end{CodeChunk}
+
 \subsubsection{fbroc Package}\label{fbroc-package}
 
 The \pkg{fbroc} package is one of the most popular packages for doing
@@ -347,14 +361,13 @@ ROC analysis \citep{fbroc}. Using \code{prediction} and
 \code{performance} functions, we see that the estimated AUC is much
 higher than the true AUC:
 
-\begin{CodeChunk}
+\textbackslash{}begin\{CodeChunk\}
 
-\begin{CodeInput}
-R> library(fbroc)
-R> fb_roc_default = boot.roc(x, as.logical(y), n.boot = 1000, tie.strategy = 2)
-R> auc_def = perf(fb_roc_default, "auc")
-R> auc_def[["Observed.Performance"]]
-\end{CodeInput}
+\textbackslash{}begin\{CodeInput\} R\textgreater{} library(fbroc)
+R\textgreater{} fb\_roc\_default = boot.roc(x, as.logical(y), n.boot =
+1000, tie.strategy = 2) R\textgreater{} auc\_def =
+perf(fb\_roc\_default, ``auc'') R\textgreater{}
+auc\_def\$Observed.Performance \textbackslash{}end\{CodeInput\}
 
 \begin{CodeOutput}
 [1] 0.6036415
@@ -363,18 +376,32 @@ R> auc_def[["Observed.Performance"]]
 \begin{CodeInput}
 R> fb_roc_alternative = boot.roc(x, as.logical(y), n.boot = 1000, tie.strategy = 1)
 R> auc_alt = perf(fb_roc_alternative, "auc")
-R> auc_alt[["Observed.Performance"]]
+R> auc_alt["Observed.Performance"]
 \end{CodeInput}
 
-\begin{CodeOutput}
-[1] 0.6036415
-\end{CodeOutput}
-\end{CodeChunk}
+\textbackslash{}begin\{CodeOutput\} \$Observed.Performance {[}1{]}
+0.6036415 \textbackslash{}end\{CodeOutput\}
+\textbackslash{}end\{CodeChunk\}
 
 \begin{CodeChunk}
 
+\begin{CodeInput}
+R> dl = cranlogs::cran_downloads(
+R+   when = "last-month", 
+R+   packages = c("pROC", "ROCR", "fbroc", "AUC",
+R+                "PKNCA", "auRoc", "caTools", "npROCRegression", 
+R+                "roccv", "ROC632", "correctedAUC", "cvAUC",
+R+                "optAUC", "tpAUC"))
+R> dl = dl %>% 
+R+   arrange(package, date) %>% 
+R+   group_by(package) %>%
+R+   mutate(count = cumsum(count)) %>% 
+R+   ungroup
+R> dl %>% ggplot(aes(x = date, y = count, colour = package)) + geom_line()
+\end{CodeInput}
 
-\begin{center}\includegraphics{index_files/figure-latex/unnamed-chunk-16-1} \end{center}
+
+\begin{center}\includegraphics{index_files/figure-latex/unnamed-chunk-18-1} \end{center}
 
 \end{CodeChunk}
 

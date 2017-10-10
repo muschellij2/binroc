@@ -2,7 +2,7 @@ x = c(rep(0, 52), rep(1, 32),
       rep(0, 35), rep(1, 50))
 y = c(rep(0, 84), rep(1, 85))
 df = data.frame(x,y)
-write.csv(df, "sample_data.csv", row.names = FALSE)
+# write.csv(df, "sample_data.csv", row.names = FALSE)
 tab = table(x, y)
 sens = tab[2,2] / sum(tab[,2])
 spec = tab[1,1] / sum(tab[,1])

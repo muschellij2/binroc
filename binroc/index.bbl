@@ -1,4 +1,4 @@
-\begin{thebibliography}{1}
+\begin{thebibliography}{3}
 \newcommand{\enquote}[1]{``#1''}
 \providecommand{\natexlab}[1]{#1}
 \providecommand{\url}[1]{\texttt{#1}}
@@ -8,6 +8,21 @@
   \providecommand{\doi}{doi:\discretionary{}{}{}\begingroup
   \urlstyle{rm}\Url}\fi
 \providecommand{\eprint}[2][]{\url{#2}}
+
+\bibitem[{Peter(2016)}]{fbroc}
+Peter E (2016).
+\newblock \emph{fbroc: Fast Algorithms to Bootstrap Receiver Operating
+  Characteristics Curves}.
+\newblock R package version 0.4.0,
+  \urlprefix\url{https://CRAN.R-project.org/package=fbroc}.
+
+\bibitem[{Robin \emph{et~al.}(2011)Robin, Turck, Hainard, Tiberti, Lisacek,
+  Sanchez, and Müller}]{pROC}
+Robin X, Turck N, Hainard A, Tiberti N, Lisacek F, Sanchez JC, Müller M
+  (2011).
+\newblock \enquote{{pROC}: an open-source package for {R} and {S+} to analyze
+  and compare {ROC} curves.}
+\newblock \emph{BMC Bioinformatics}, \textbf{12}, 77.
 
 \bibitem[{Sing \emph{et~al.}(2005)Sing, Sander, Beerenwinkel, and
   Lengauer}]{ROCR}

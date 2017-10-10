@@ -23,24 +23,26 @@ preamble: >
   \usepackage{amsmath}
 output: rticles::jss_article
 bibliography: binroc.bib
-
 ---
 
 # Introduction
 
+```{r, message=FALSE}
+library(cranlogs)
+library(ggplot2)
+library(dplyr)
+```
+<!-- * \proglang{Java} -->
+<!-- * \pkg{plyr} -->
+<!-- * \code{print("abc")} -->
 
-This template demonstrates some of the basic latex you'll need to know to create a JSS article.
+In many applications receiver operator characteristic (ROC) curves are used to show
 
-## Code formatting
-
-Don't use markdown, instead use the more precise latex commands:
-
-* \proglang{Java}
-* \pkg{plyr}
-* \code{print("abc")}
+In this tutorial, we will show the calculation of the AUC
 
 # Simple Example
 
+Here we will create a simple scenario where there is a binary predictor $X$ and a binary outcome $Y$.  
 ```{r create_tab}
 x = c(rep(0, 52), rep(1, 32),
       rep(0, 35), rep(1, 50))
@@ -49,7 +51,7 @@ tab = table(x, y)
 tab
 ```
 
-
+## Mathematical Proof of AUC for Single Binary Predictor
 As there are only two outcomes for $X$, we can expand the probability using the law of total probability:
 \begin{align}
 P(X_{1} > X_{0}) &= P(X_{1} > X_{0} | X_{1} = 1) P(X_{1} = 1) \nonumber \\
@@ -90,6 +92,13 @@ true_auc = sens * spec
 print(true_auc)
 ```
 
+### Reverse Labeling 
+
+```{r}
+flip_auc = (1 - sens) * (1 - spec)
+print(flip_auc)
+```
+
 ```{r}
 fpr = 1-spec
 area_of_tri = 1/2 * sens * fpr
@@ -122,13 +131,22 @@ sample_est_auc
 
 ## R
 
+### caTools Package
+
+The \pkg{caTools} package is one of the most popular packages in R, and has analysis for doing area under the curve:
+
+```{r}
+library(caTools)
+colAUC(x, y)
+```
+
+
 ### ROCR Package
 
-The \pkg{ROCR} package is one of the most popular packages for doing ROC analysis \cite{ROCR}.  Using \code{prediction} and \code{performance} functions, we see that the estimated AUC is much higher than the true AUC:
+The \pkg{ROCR} package is one of the most popular packages for doing ROC analysis [@ROCR].  Using \code{prediction} and \code{performance} functions, we see that the estimated AUC is much higher than the true AUC:
 
 ```{r}
 library(ROCR)
-
 pred = prediction(x, y)
 auc_est = performance(pred, "auc")
 auc_est@y.values[[1]]
@@ -172,3 +190,133 @@ false_auc = area_of_left_tri + true_auc + area_of_top_tri
 false_auc
 ```
 
+### pROC Package
+
+The \pkg{pROC} package is one of the most popular packages for doing ROC analysis [@pROC].  Using \code{prediction} and \code{performance} functions, we see that the estimated AUC is much higher than the true AUC:
+
+
+```{r}
+library(pROC)
+pROC_roc = pROC::roc(predictor = x, response = y)
+pROC_roc[["auc"]]
+```
+
+
+```{r, echo = FALSE, fig.width=10, fig.height=10}
+ggroc(pROC_roc, colour = "firebrick") + 
+  geom_step(aes(x = specificity, y = sensitivity),
+            colour = "deepskyblue3")
+```
+
+```{r, echo = FALSE, fig.width=10, fig.height=10}
+par(mfrow = c(2, 2), oma = c(0, 0, 0, 0), mar = c(5, 4.1, 0, 0))
+plot.roc(pROC_roc)
+plot.roc(pROC_roc, type = "s")
+plot(y = pROC_roc$sensitivities,
+     x = 1 - pROC_roc$specificities, type = "l")
+plot(y = pROC_roc$sensitivities,
+     x = 1 - pROC_roc$specificities, type = "s")
+```
+
+
+
+
+
+### fbroc Package
+
+The \pkg{fbroc} package is one of the most popular packages for doing ROC analysis [@fbroc].  Using \code{prediction} and \code{performance} functions, we see that the estimated AUC is much higher than the true AUC:
+
+
+```{r}
+library(fbroc)
+fb_roc_default = boot.roc(x, as.logical(y), n.boot = 1000, tie.strategy = 2)
+auc_def = perf(fb_roc_default, "auc")
+auc_def[["Observed.Performance"]]
+fb_roc_alternative = boot.roc(x, as.logical(y), n.boot = 1000, tie.strategy = 1)
+auc_alt = perf(fb_roc_alternative, "auc")
+auc_alt[["Observed.Performance"]]
+```
+
+
+
+```{r, echo = FALSE}
+dl = cranlogs::cran_downloads(
+  # when = "last-month", 
+  from = "2017-09-08",
+  to = "2017-10-09",
+  packages = c("pROC", "ROCR", "fbroc", "AUC",
+               "PKNCA", "auRoc", "caTools", "npROCRegression", 
+               "roccv", "ROC632", "correctedAUC", "cvAUC",
+               "optAUC", "tpAUC"))
+dl = dl %>% 
+  arrange(package, date) %>% 
+  group_by(package) %>%
+  mutate(count = cumsum(count),
+         label = last(count),
+         last_date = last(date)) %>% 
+  ungroup
+r = range(dl$date)
+r[2] = r[2] + 3
+dl_text = dl %>% 
+  select(package, label, last_date) %>% 
+  distinct %>% 
+  mutate(date = last_date + 3,
+         count = label) %>% 
+  arrange(desc(count), package)
+dl_text = dl_text %>% head(5)
+dl = dl %>% 
+  filter(package %in% dl_text$package)
+dl_text2 = dl_text %>% 
+  mutate(count = ifelse(package == "AUC", count + 2000, count),
+         count = ifelse(package == "cvAUC", count - 2000, count))
+dl %>% 
+  ggplot(aes(x = date, y = count, group = package)) + 
+  xlim(r) +
+  geom_line() + 
+  geom_text(aes(label = package), data = dl_text2,
+                size = 3)
+
+dl %>% 
+  filter(!package %in% c("caTools")) %>% 
+  ggplot(aes(x = date, y = count, group = package)) + 
+  geom_line() + 
+  geom_text(
+    aes(label = package), 
+    data = dl_text %>% 
+      filter(!package %in% c("caTools")))
+```
+
+
+## Stata
+
+```{r global-options, include=FALSE}
+library(haven)
+df = data.frame(x,y)
+haven::write_dta(data = df, path = "sample_data.dta", version = 13)
+
+library(statamd)
+statapath = statamd::stata_engine_path()
+profile_do(dataset = "sample_data.dta")
+```
+
+```{r, engine = "stata", engine.path = statapath, comment = ""}
+roctab x y
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+```{r, engine='R', include = FALSE, eval = TRUE}
+unlink("profile.do")
+file.remove("sample_data.dta")
+```
