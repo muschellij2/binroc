@@ -8,11 +8,11 @@ author:
     email: \email{jmuschel@jhsph.edu}
     url: http://johnmuschelli.
 title:
-  formatted: "ROC and AUC in R with a Single Binary Predictor"
+  formatted: "ROC and AUC in R with a Binary Predictor"
   # If you use tex in the formatted title, also supply version without
-  plain:     "ROC and AUC in R with a Single Binary Predictor"
+  plain:     "ROC and AUC in R with a Binary Predictor"
   # For running headers, if needed
-  short:     "Single Binary Predictor ROC"
+  short:     "Binary Predictor ROC"
 abstract: >
   The abstract of the article.
 keywords:
@@ -27,6 +27,21 @@ bibliography: binroc.bib
 
 # Introduction
 
+In many applications, receiver operator characteristic (ROC) curves are used to show how a predictor compares to the true outcome.   One of the large draws of th ROC curve is that it is threshold-agnostic; it shows the performace of a predictor without a specific threshold and also gives a criteria to choose an optimal threshold based on a certain cost function.
+
+Many predictors, especially medical tests, result in a binary decision; a value is higher than a pre-determined threshold or not.  Similarly, some are simply categorical or discrete; for example, blood pressure may be low, normal, or high.  These are useful indicators of presence disease, which is a primary outcome of interest.  
+
+@fawcett2006introduction describes (in Fig. 6) how ties are handled in a predictor.  Ties are distinctly relevant for discrete and binary predictors or models that predict a discrete number of values, where many observations can have the same value/risk score.  When drawing the ROC curve, one can assume that all the ties do not correctly classify the outcome (Fawcett called the "pessimistic" approach) or that all the ties do correclty classify the outcome (called the "optimistic" approach).  But Fawcett notes: 
+> Any mixed ordering of the instances will give a different set of step segments within the rectangle formed by these two extremes. However, the ROC curve should represent the *expected* performance of the classifier, which, lacking any other information, is the average of the pessimistic and optimistic segments. 
+
+Therefore, 
+
+With some assumptions, you can think of the binary predictor as generating from a distribution of values from a continuous distribution that has been thresholded.  Therefore, the sensitivity of this thresholded predictor actually represents one point on the ROC curve of the true underlying continuous distribution.  Therefore the ROC curve of a binary predictor is not really appropriate.  But alas, ROC and AUC analysis is done on binary predictors and used to inform if one variable is more predictive than the other.  
+
+A more appropriate comparison of a continuous predictor and the binary predictor may be to compare the sensitivity and specificity (or overall accuracy) of the continuous predictor given the optimal threshold versus that of the binary predictor. 
+
+This expectation directly applies to the assignment of a half probability of success when the data are tied.  This half probability is linked to how ties are treated in the Wilcoxon rank sum test.  As much of the theory of ROC curve testing, and therefore testing of differences in AUC, is based on the theory of the Wilcoxon rank-sum test, this treatment of ties is relevant to statistical inference.  
+
 ```{r, message=FALSE}
 library(cranlogs)
 library(ggplot2)
@@ -36,7 +51,6 @@ library(dplyr)
 <!-- * \pkg{plyr} -->
 <!-- * \code{print("abc")} -->
 
-In many applications receiver operator characteristic (ROC) curves are used to show
 
 In this tutorial, we will show the calculation of the AUC
 
@@ -119,7 +133,10 @@ est_auc = function(x, y) {
   n = 1000000
   c1 = sample(x1, size = n, replace = TRUE)
   c0 = sample(x0, size = n, replace = TRUE)
-  mean(c1 > c0)
+  true_auc = mean(c1 > c0)
+  # calc_auc = true_auc + 1/2 * mean(c1 == c0)
+  # c(true_auc, calc_auc)
+  return(true_auc)
 }
 sample_est_auc = est_auc(x, y)
 sample_est_auc
@@ -303,9 +320,65 @@ profile_do(dataset = "sample_data.dta")
 roctab x y
 ```
 
+## Fawcett Example
 
+```{r fawcett}
+faw = data.frame(y = c(rep(TRUE, 6), rep(FALSE, 4)),
+                 x = c(0.99999, 0.99999, 0.99993, 
+                       0.99986, 0.99964, 0.99955, 
+                       0.68139, 0.50961, 0.48880, 0.44951))
+faw$hyp = faw$x > 0.5
+pred = prediction(predictions = faw$x, labels = faw$y)
+par(mfrow = c(1, 2))
+perf = performance(pred, "tpr", "fpr")
+plot(perf)
+abline(a = 0, b = 1)
+plot(perf, type = "s")
+abline(a = 0, b = 1)
+auc_est = performance(pred, "auc")
+auc_est@y.values[[1]]
+est_auc(x = faw$x, y = faw$y)
+```
 
-
+```{r}
+library(dplyr)
+fawcett = function(df) {
+  L_sorted = df %>% 
+    arrange(desc(x), y)
+  n_sample = nrow(L_sorted)
+  P = sum(L_sorted[["y"]])
+  N = n_sample - P
+  FP = TP = 0
+  R = NULL
+  f_prev = -Inf
+  i = 1
+  for (i in seq(n_sample)) {
+    f_i = L_sorted[["x"]][i]
+    if (f_i != f_prev) {
+      fpr = FP/N
+      tpr = TP / P
+      R = rbind(R, c(fpr = fpr, tpr = tpr))
+      f_prev = f_i
+    }
+    if (L_sorted$y[i]) {
+      TP = TP + 1
+    }
+    if (!L_sorted$y[i]) {
+      FP = FP + 1
+    }  
+  }
+  fpr = FP/N
+  tpr = TP / P
+  R = rbind(R, c(fpr = fpr, tpr = tpr))
+  return(R) 
+}
+fawcett_roc = fawcett(df)
+seq_range = function(x, ...) {
+  rx = range(x)
+  seq(rx[1], rx[2], ...)
+}
+# seq_range(faw$x, )
+```
 
 
 
