@@ -6,11 +6,11 @@ author:
       615 N Wolfe St
       Baltimore, MD 21205
     email: \email{jmuschel@jhsph.edu}
-    url: http://johnmuschelli.
+    url: http://johnmuschelli.com
 title:
-  formatted: "ROC and AUC in R with a Binary Predictor"
+  formatted: "ROC and AUC with a Binary Predictor"
   # If you use tex in the formatted title, also supply version without
-  plain:     "ROC and AUC in R with a Binary Predictor"
+  plain:     "ROC and AUC with a Binary Predictor"
   # For running headers, if needed
   short:     "Binary Predictor ROC"
 abstract: >
@@ -21,67 +21,80 @@ keywords:
   plain:     [roc, auc, area under the curve, R]
 preamble: >
   \usepackage{amsmath}
-output: rticles::jss_article
+output: 
+  rticles::jss_article
 bibliography: binroc.bib
 ---
 
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  message = FALSE, warning = FALSE, comment = "")
+library(reticulate)
+use_python(Sys.which("python3"))
+use_virtualenv("r-tensorflow")
+knitr::knit_engines$set(python = reticulate::eng_python)
+
+# devtools::install_github("rstudio/rticles", ref = "jss")
+```
+
 # Introduction
 
-In many applications, receiver operator characteristic (ROC) curves are used to show how a predictor compares to the true outcome.   One of the large draws of th ROC curve is that it is threshold-agnostic; it shows the performace of a predictor without a specific threshold and also gives a criteria to choose an optimal threshold based on a certain cost function.
+In many applications, receiver operator characteristic (ROC) curves are used to show how a predictor compares to the true outcome.   One of the large advantages of ROC analysis is that it is threshold-agnostic; it shows the performance of a predictor without a specific threshold and also gives a criteria to choose an optimal threshold based on a certain cost function.  Typically, an ROC analysis shows how sensitivity changes with varying specificity.  
 
-Many predictors, especially medical tests, result in a binary decision; a value is higher than a pre-determined threshold or not.  Similarly, some are simply categorical or discrete; for example, blood pressure may be low, normal, or high.  These are useful indicators of presence disease, which is a primary outcome of interest.  
+Many predictors, especially medical tests, result in a binary decision; a value is higher than a pre-determined threshold or not.  Similarly, some are simply categorical or discrete; for example, blood pressure may be low, normal, or high.  These are useful indicators of presence disease, which is a primary outcome of interest.  The predictive capabilities of the variable is summarized many times in the area under the curve (AUC).  Additionally, partial ROC (pROC) analysis keeps a specificity fixed and determines the optimal sensitivity or the partial AUC (pAUC). 
 
-@fawcett2006introduction describes (in Fig. 6) how ties are handled in a predictor.  Ties are distinctly relevant for discrete and binary predictors or models that predict a discrete number of values, where many observations can have the same value/risk score.  When drawing the ROC curve, one can assume that all the ties do not correctly classify the outcome (Fawcett called the "pessimistic" approach) or that all the ties do correclty classify the outcome (called the "optimistic" approach).  But Fawcett notes: 
-> Any mixed ordering of the instances will give a different set of step segments within the rectangle formed by these two extremes. However, the ROC curve should represent the *expected* performance of the classifier, which, lacking any other information, is the average of the pessimistic and optimistic segments. 
-
-Therefore, 
-
-With some assumptions, you can think of the binary predictor as generating from a distribution of values from a continuous distribution that has been thresholded.  Therefore, the sensitivity of this thresholded predictor actually represents one point on the ROC curve of the true underlying continuous distribution.  Therefore the ROC curve of a binary predictor is not really appropriate.  But alas, ROC and AUC analysis is done on binary predictors and used to inform if one variable is more predictive than the other.  
+One can assume the binary predictor is generated from a continuous distribution that has been thresholded.  Therefore, the sensitivity of this thresholded predictor actually represents one point on the ROC curve of the true underlying continuous distribution.  Therefore the ROC curve of a binary predictor is not really appropriate, but should be represented by a single point on the curve.  But alas, ROC and AUC analysis is done on binary predictors and used to inform if one variable is more predictive than the other [@jama, @jama2].  For example, these cases 
 
 A more appropriate comparison of a continuous predictor and the binary predictor may be to compare the sensitivity and specificity (or overall accuracy) of the continuous predictor given the optimal threshold versus that of the binary predictor. 
 
-This expectation directly applies to the assignment of a half probability of success when the data are tied.  This half probability is linked to how ties are treated in the Wilcoxon rank sum test.  As much of the theory of ROC curve testing, and therefore testing of differences in AUC, is based on the theory of the Wilcoxon rank-sum test, this treatment of ties is relevant to statistical inference.  
+@fawcett2006introduction describes (in Fig. 6) how ties are handled in a predictor.  Ties are distinctly relevant for discrete and binary predictors or models that predict a discrete number of values, where many observations can have the same value/risk score.  When drawing the ROC curve, one can assume that all the ties do not correctly classify the outcome (Fawcett called the "pessimistic" approach) or that all the ties do correclty classify the outcome (called the "optimistic" approach).  But Fawcett notes: 
 
-```{r, message=FALSE}
+> Any mixed ordering of the instances will give a different set of step segments within the rectangle formed by these two extremes. However, the ROC curve should represent the *expected* performance of the classifier, which, lacking any other information, is the average of the pessimistic and optimistic segments. 
+
+This "expected" performance directly applies to the assignment of a half probability of success when the data are tied, which is implied by the "trapezoidal rule" from @hanley1982meaning.  This half probability is linked to how ties are treated in the Wilcoxon rank sum test.  As much of the theory of ROC curve testing, and therefore testing of differences in AUC, is based on the theory of the Wilcoxon rank-sum test, this treatment of ties is relevant to statistical inference.  
+
+
+Others have discussed insights into binary predictors in addition to @fawcett2006introduction, but they are mentioned in small sections of the paper [@saito2015precision, @pepe2009estimation].  Other information regarding ties and binary data are blog posts or working papers such as  http://blog.revolutionanalytics.com/2016/11/calculating-auc.html
+or https://www.epeter-stats.de/roc-curves-and-ties/, which is writtenthe author of the \pkg{fbroc} [@fbroc].  Most notably, @hsu2014inference is an extensive discussion of ties, but the paper was not published. The overall goal of this paper is to warn researchers commonly-used software for calculating AUC may be misleading for binary or categorical predictors depending on the definition of the AUC.
+
+```{r, message=FALSE, echo = FALSE}
 library(cranlogs)
 library(ggplot2)
 library(dplyr)
 ```
+
 <!-- * \proglang{Java} -->
 <!-- * \pkg{plyr} -->
 <!-- * \code{print("abc")} -->
 
+# Mathematical Proof of AUC for Single Binary Predictor
 
-In this tutorial, we will show the calculation of the AUC
 
-# Simple Example
+Let us assume we have a binary predictor $X$ and a binary outcome $Y$, such that $X$ and $Y$ only take the values $0$ and 1.  Let $X_{i}$ be the values of $X | Y = i$, where $i \in \{0, 1\}$.  
 
-Here we will create a simple scenario where there is a binary predictor $X$ and a binary outcome $Y$.  
-```{r create_tab}
-x = c(rep(0, 52), rep(1, 32),
-      rep(0, 35), rep(1, 50))
-y = c(rep(0, 84), rep(1, 85))
-tab = table(x, y)
-tab
-```
+Fawcett goes on to state:
+> AUC of a classifier is equivalent to the probability that the classifier will rank a randomly chosen positive instance higher than a randomly chosen negative instance. 
 
-## Mathematical Proof of AUC for Single Binary Predictor
-As there are only two outcomes for $X$, we can expand the probability using the law of total probability:
+In other words, we $\text{AUC} = P(X_{1} > X_{0})$.  As there are only two outcomes for $X$, we can expand this probability using the law of total probability:
+
 \begin{align}
 P(X_{1} > X_{0}) &= P(X_{1} > X_{0} | X_{1} = 1) P(X_{1} = 1) \nonumber \\
 &+ P(X_{1} > X_{0} | X_{1} = 0) P(X_{1} = 0) \label{eq:expand1} \\
 &= P(X_{1} > X_{0} | X_{1} = 1) P(X_{1} = 1) \label{eq:expand}
 \end{align}
-where the second term of equation \eqref{eq:expand1} is equal to zero because $X_{0} \in \{0, 1\}$.  
 
-Here we see that the second term of equation \eqref{eq:expand} is the sensitivity:
+as $P(X_{1} > X_{0} | X_{1} = 0) = 0$ because $X_{0} \in \{0, 1\}$. We see that  $P(X_{1} = 1)$ in equation \eqref{eq:expand} is the sensitivity:
+
 \begin{align*}
 P(X_{1} = 1) &= P(X = 1 | Y = 1)\\
 &= \frac{TP}{TP + FN} \\
 &= \text{sensitivity}
 \end{align*}
 
-Here we show the first term of equation \eqref{eq:expand} is the specificity:
+and that $P(X_{1} > X_{0} | X_{1} = 1)$ in equation \eqref{eq:expand} is the specificity:
+
 \begin{align*}
 P(X_{1} > X_{0} | X_{1} = 1) &= P(X_{1} > X_{0} | X_{1} = 1, X_{0} =1) P(X_{0} = 1) \\
 &+ P(X_{1} > X_{0} | X_{1} = 1, X_{0} =0) P(X_{0} = 0) \\
@@ -93,83 +106,120 @@ P(X_{1} > X_{0} | X_{1} = 1) &= P(X_{1} > X_{0} | X_{1} = 1, X_{0} =1) P(X_{0} =
 \end{align*}
 
 Therefore, we combine these two to show that equation \eqref{eq:expand} reduces to:
+
 $$
-P(X_{1} > X_{0}) = \text{specificity} * \text{sensitivity}
+P(X_{1} > X_{0}) = \text{specificity} \times \text{sensitivity}
 $$
 
 
-Therefore, the true AUC should be equal to:
-```{r}
-sens = tab[2,2] / sum(tab[,2])
-spec = tab[1,1] / sum(tab[,1])
-true_auc = sens * spec
-print(true_auc)
+## Simple Example
+
+Let's assume $X$ and $Y$ have the following joint distribution: 
+
+```{r create_tab, echo =FALSE , results = "asis"}
+x = c(rep(0, 52), rep(1, 32),
+      rep(0, 35), rep(1, 50))
+y = c(rep(0, 84), rep(1, 85))
+tab = table(x, y)
+knitr::kable(tab, format = "latex")
 ```
 
-### Reverse Labeling 
-
-```{r}
-flip_auc = (1 - sens) * (1 - spec)
-print(flip_auc)
-```
-
-```{r}
-fpr = 1-spec
-area_of_tri = 1/2 * sens * fpr
-area_of_quad = sens * spec + 1/2 * spec * (1-sens)
-auc = area_of_tri + area_of_quad
-```
+Therefore, the AUC should be equal to $\frac{`r tab[2,2]`}{`r sum(tab[,2])`} \times \frac{`r tab[1,1]`}{`r sum(tab[,1])`}$, which equals:
 
 ```{r, echo = FALSE}
-n = 1000000
+sens = tab[2,2] / sum(tab[,2])
+spec = tab[1,1] / sum(tab[,1])
+auc.defn = sens * spec
+print(auc.defn)
 ```
 
-We can also show that if we use a simple sampling method, we can estimate this true AUC.  Here, the function \code{est_auc} samples `r n` random samples from $X_{1}$ and $X_{0}$, then calculates $\hat{P}(X_{1} > X_{0})$:
+As this is the strict definition of AUC, let us call this $\text{AUC}_{\text{definition}}$.
+
+Note, if we reverse the labels, then the sensitivity and the specificity are estimated by $1$ minus that measure, or $\frac{`r tab[1,2]`}{`r sum(tab[,2])`} \times \frac{`r tab[2,1]`}{`r sum(tab[,1])`}$, which is equal to:
 
 ```{r}
-est_auc = function(x, y) {
-  x1 = x[y == 1]
-  x0 = x[y == 0]
-  n = 1000000
-  c1 = sample(x1, size = n, replace = TRUE)
-  c0 = sample(x0, size = n, replace = TRUE)
-  true_auc = mean(c1 > c0)
-  # calc_auc = true_auc + 1/2 * mean(c1 == c0)
-  # c(true_auc, calc_auc)
-  return(true_auc)
-}
-sample_est_auc = est_auc(x, y)
-sample_est_auc
+flip.auc = (1 - sens) * (1 - spec)
+print(flip.auc)
+```
+
+Thus, as this AUC is less than the original labeling, we would choose that with the original labeling.
+
+If we change the definition of AUC slightly while accounting for ties, $\text{AUC}_{\text{w/ties}}$ to 
+$$
+\text{AUC}_{\text{w/ties}} = P(X_{1} > X_{0}) + \frac{1}{2} P(X_{1} = X_{0})
+$$
+we see that we would calculate the AUC by $\text{AUC}_{\text{definition}} + \frac{1}{2}\left( \frac{`r tab[2,2]` + `r tab[1,1]`}{`r sum(tab)`}\right)$, which is equal to:
+
+```{r, echo = FALSE}
+fpr = 1 - spec
+area_of_tri = 1/2 * sens 
+area_of_tri = area_of_tri * fpr
+area_of_quad = sens * spec 
+area_of_upper_tri = 1/2 * spec 
+area_of_upper_tri = area_of_upper_tri * (1 - sens)
+area_of_quad = sens * spec + area_of_upper_tri
+auc = area_of_tri + area_of_quad
+print(auc)
 ```
 
 
+We will explore the estimated ROC curve and AUC from the implentations in the follwing `R` packages: \pkg{ROCR} [@ROCR], \pkg{caTools}, \pkg{pROC} [@pROC], and \pkg{fbroc} [@fbroc].  We will also show these agree with the Python implementation in `sklearn.metrics` [@scikitlearn] and the Stata function `roctab`.  We note that these functions all count half the probability of ties, which raises the AUC.  We will present a geometric discussion of the ROC as well.
 
 # Current Implementations
 
 ## R
 
-### caTools Package
-
-The \pkg{caTools} package is one of the most popular packages in R, and has analysis for doing area under the curve:
+The \pkg{caTools} package calculates AUC using the `colAUC` function:
 
 ```{r}
 library(caTools)
 colAUC(x, y)
 ```
 
-
-### ROCR Package
-
-The \pkg{ROCR} package is one of the most popular packages for doing ROC analysis [@ROCR].  Using \code{prediction} and \code{performance} functions, we see that the estimated AUC is much higher than the true AUC:
+In \pkg{ROCR}, AUC is calculated from a \code{performance} object, which takes in a \code{prediction} object:
 
 ```{r}
 library(ROCR)
+yvalues = function(perf) {
+  unlist(slot(perf, "y.values"))
+}
+xvalues = function(perf) {
+  unlist(slot(perf, "x.values"))
+}
+
 pred = prediction(x, y)
-auc_est = performance(pred, "auc")
-auc_est@y.values[[1]]
+auc.est = performance(pred, "auc")
+yvalues(auc.est)
 ```
 
-Looking at the plot for the ROC curve in ROCR, we can see why this may be:
+The \pkg{pROC} package calculates AUC using the `roc` function:
+
+```{r}
+library(pROC)
+pROC.roc = pROC::roc(predictor = x, response = y)
+pROC.roc[["auc"]]
+```
+
+
+```{r, echo = FALSE, fig.width=10, fig.height=10}
+ggroc(pROC.roc, colour = "firebrick") + 
+  geom_step(aes(x = specificity, y = sensitivity),
+            colour = "deepskyblue3")
+```
+
+```{r, echo = FALSE, fig.width=10, fig.height=10}
+par(mfrow = c(2, 2), oma = c(0, 0, 0, 0), mar = c(5, 4.1, 0, 0))
+plot.roc(pROC.roc)
+plot.roc(pROC.roc, type = "s")
+plot(y = pROC.roc[["sensitivities"]],
+     x = 1 - pROC.roc[["specificities"]], type = "l")
+plot(y = pROC.roc[["sensitivities"]],
+     x = 1 - pROC.roc[["specificities"]], type = "s")
+```
+
+
+Looking at the plot for the ROC curve in \pkg{ROCR}, we can see why this may be:
+
 ```{r, eval = FALSE, echo = TRUE}
 par(mfrow = c(1, 2))
 perf = performance(pred, "tpr", "fpr")
@@ -179,82 +229,60 @@ plot(perf, type = "s")
 abline(a = 0, b = 1)
 ```
 
-```{r, echo = FALSE, fig.width=10, fig.height=5}
-par(mfrow = c(1, 2), oma = c(0, 0, 0, 0), mar = c(5, 4.1, 0, 0))
-perf = performance(pred, "tpr", "fpr")
-plot(perf)
-verts = cbind(x = c(0, 1 - spec, 1 - spec), y = c(0, sens, 0))
-polygon(verts, col = "orange", border = FALSE)
-verts = cbind(x = c(1 - spec, 1, 1), y = c(sens, 1, sens))
-polygon(verts, col = "firebrick", border = FALSE)
-rect(xleft = 1 - spec, xright = 1, ybottom = 0, ytop = sens, col = "deepskyblue3", border = FALSE)
-lines(perf@x.values[[1]], perf@y.values[[1]], lwd = 2)
-# rect(xleft = 0, ybottom =0, xright= 1-spec, ytop = sens, col = "red")
-# rect(xleft = 1 - spec, ybottom = sens, xright= 1, ytop = 1, col = "blue")
-abline(a = 0, b = 1,  col = "gray",lty = "dashed")
-plot(perf@x.values[[1]], perf@y.values[[1]], type = "s", ylab = "", xlab = "False positive rate")
-rect(xleft = 1 - spec, xright = 1, ybottom = 0, ytop = sens, col = "deepskyblue3", border = FALSE)
-lines(perf@x.values[[1]], perf@y.values[[1]], lwd = 2, type = "s")
-abline(a = 0, b = 1, col = "gray", lty = "dashed")
-```
-
 Looking geometrically at the plot, we can see how 
+
 ```{r}
 fpr = 1 - spec
-area_of_left_tri = 1/2 * sens * fpr
-area_of_top_tri = 1/2 * spec * (1 - sens)
-false_auc = area_of_left_tri + true_auc + area_of_top_tri
-false_auc
+left.tri = 1/2 * sens * fpr
+right.tri = 1/2 * spec * (1 - sens)
+false.auc = left.tri + auc.defn + right.tri
+false.auc
 ```
 
 ### pROC Package
 
-The \pkg{pROC} package is one of the most popular packages for doing ROC analysis [@pROC].  Using \code{prediction} and \code{performance} functions, we see that the estimated AUC is much higher than the true AUC:
 
-
-```{r}
-library(pROC)
-pROC_roc = pROC::roc(predictor = x, response = y)
-pROC_roc[["auc"]]
-```
-
-
-```{r, echo = FALSE, fig.width=10, fig.height=10}
-ggroc(pROC_roc, colour = "firebrick") + 
-  geom_step(aes(x = specificity, y = sensitivity),
-            colour = "deepskyblue3")
-```
-
-```{r, echo = FALSE, fig.width=10, fig.height=10}
-par(mfrow = c(2, 2), oma = c(0, 0, 0, 0), mar = c(5, 4.1, 0, 0))
-plot.roc(pROC_roc)
-plot.roc(pROC_roc, type = "s")
-plot(y = pROC_roc$sensitivities,
-     x = 1 - pROC_roc$specificities, type = "l")
-plot(y = pROC_roc$sensitivities,
-     x = 1 - pROC_roc$specificities, type = "s")
-```
-
-
-
-
-
-### fbroc Package
-
-The \pkg{fbroc} package is one of the most popular packages for doing ROC analysis [@fbroc].  Using \code{prediction} and \code{performance} functions, we see that the estimated AUC is much higher than the true AUC:
+The \pkg{fbroc} package is one of the most popular packages for doing ROC analysis [@fbroc].  Using the `fbroc::boot.roc` and `fbroc::perf` functions, we have:
 
 
 ```{r}
 library(fbroc)
-fb_roc_default = boot.roc(x, as.logical(y), n.boot = 1000, tie.strategy = 2)
-auc_def = perf(fb_roc_default, "auc")
-auc_def[["Observed.Performance"]]
-fb_roc_alternative = boot.roc(x, as.logical(y), n.boot = 1000, tie.strategy = 1)
-auc_alt = perf(fb_roc_alternative, "auc")
-auc_alt[["Observed.Performance"]]
+fbroc.default = boot.roc(x, as.logical(y), 
+                          n.boot = 1000, tie.strategy = 2)
+auc.def = perf(fbroc.default, "auc")
+auc.def[["Observed.Performance"]]
+fbroc.alternative = boot.roc(x, as.logical(y), n.boot = 1000, tie.strategy = 1)
+auc.alt = perf(fbroc.alternative, "auc")
+auc.alt[["Observed.Performance"]]
 ```
 
 
+
+```{r}
+python_figure = "python_roc.png"
+# Taken from
+# https://qiita.com/bmj0114/items/460424c110a8ce22d945
+sk = import("sklearn.metrics")
+plt = import("matplotlib.pyplot")
+py_roc_curve = sk$roc_curve(y_score = x, y_true = y)
+names(py_roc_curve) = c("fpr", "tpr", "thresholds")
+roc_auc = sk$auc(py_roc_curve$fpr, py_roc_curve$tpr)
+
+plt$figure()
+plt$plot(py_roc_curve$fpr, py_roc_curve$tpr, color='darkorange', lw=1, label= sprintf('ROC curve (area = %0.3f)', roc_auc))
+plt$plot(c(0, 1), c(0, 1), color='navy', lw=1, linestyle='--')
+plt$xlim(c(0.0, 1.0))
+plt$ylim(c(0.0, 1.05))
+plt$xlabel('False Positive Rate')
+plt$ylabel('True Positive Rate')
+plt$title('Receiver operating characteristic')
+plt$legend(loc="lower right")
+plt$savefig(python_figure)
+```
+
+```{r}
+knitr::include_graphics(python_figure)
+```
 
 ```{r, echo = FALSE}
 dl = cranlogs::cran_downloads(
@@ -272,7 +300,7 @@ dl = dl %>%
          label = last(count),
          last_date = last(date)) %>% 
   ungroup
-r = range(dl$date)
+r = range(dl[["date"]])
 r[2] = r[2] + 3
 dl_text = dl %>% 
   select(package, label, last_date) %>% 
@@ -282,7 +310,7 @@ dl_text = dl %>%
   arrange(desc(count), package)
 dl_text = dl_text %>% head(5)
 dl = dl %>% 
-  filter(package %in% dl_text$package)
+  filter(package %in% dl_text[["package"]])
 dl_text2 = dl_text %>% 
   mutate(count = ifelse(package == "AUC", count + 2000, count),
          count = ifelse(package == "cvAUC", count - 2000, count))
@@ -298,7 +326,7 @@ dl %>%
   ggplot(aes(x = date, y = count, group = package)) + 
   geom_line() + 
   geom_text(
-    aes(label = package), 
+    aes(label = package),
     data = dl_text %>% 
       filter(!package %in% c("caTools")))
 ```
@@ -320,6 +348,58 @@ profile_do(dataset = "sample_data.dta")
 roctab x y
 ```
 
+
+```{r, echo = FALSE}
+n = 1000000
+```
+
+We can also show that if we use simple Monte Carlo sampling, we can estimate this true AUC, based on the definition above.  Here, the function \code{est.auc} samples $`r n`$ random samples from $X_{1}$ and $X_{0}$, then calculates $\hat{P}(X_{1} > X_{0})$:
+
+```{r}
+est.auc = function(x, y, n = 1000000) {
+  x1 = x[y == 1] # sample x | y = 1
+  x0 = x[y == 0] # sample x | y = 0
+  c1 = sample(x1, size = n, replace = TRUE)
+  c0 = sample(x0, size = n, replace = TRUE)
+  auc.defn = mean(c1 > c0) # compare
+  auc.wties = auc.defn + 1/2 * mean(c1 == c0) # compare
+  return(c(auc.defn = auc.defn,
+           auc.wties = auc.wties))
+}
+sample.estauc = est.auc(x, y)
+sample.estauc
+```
+
+
+
+```{r, echo = FALSE, fig.width=10, fig.height=5, fig.cap = "hey"}
+library(ROCR)
+pred = prediction(x, y)
+perf = performance(pred, "tpr", "fpr")
+par(mfrow = c(1, 2), oma = c(0, 0, 0, 0), mar = c(5, 4.1, 0, 0))
+plot(xvalues(perf), yvalues(perf), type = "s", 
+     ylab = "True positive rate", 
+     xlab = "False positive rate", cex = 2)
+rect(xleft = 1 - spec, xright = 1, ybottom = 0, ytop = sens, col = "deepskyblue3", border = FALSE)
+lines(xvalues(perf), yvalues(perf), lwd = 2, type = "s")
+abline(a = 0, b = 1, col = "gray", lty = "dashed")
+plot(perf, ylab = "")
+verts = cbind(x = c(0, 1 - spec, 1 - spec), y = c(0, sens, 0))
+polygon(verts, col = "orange", border = FALSE)
+verts = cbind(x = c(1 - spec, 1, 1), y = c(sens, 1, sens))
+polygon(verts, col = "firebrick", border = FALSE)
+rect(xleft = 1 - spec, xright = 1, ybottom = 0, ytop = sens, col = "deepskyblue3", border = FALSE)
+lines(xvalues(perf), yvalues(perf), lwd = 2)
+# rect(xleft = 0, ybottom =0, xright= 1-spec, ytop = sens, col = "red")
+# rect(xleft = 1 - spec, ybottom = sens, xright= 1, ytop = 1, col = "blue")
+abline(a = 0, b = 1,  col = "gray",lty = "dashed")
+```
+
+One should note, that  
+
+
+
+
 ## Fawcett Example
 
 ```{r fawcett}
@@ -327,20 +407,20 @@ faw = data.frame(y = c(rep(TRUE, 6), rep(FALSE, 4)),
                  x = c(0.99999, 0.99999, 0.99993, 
                        0.99986, 0.99964, 0.99955, 
                        0.68139, 0.50961, 0.48880, 0.44951))
-faw$hyp = faw$x > 0.5
-pred = prediction(predictions = faw$x, labels = faw$y)
+faw = faw %>% mutate(hyp = x > 0.5)
+pred = prediction(predictions = faw[, "x"], labels = faw[, "y"])
 par(mfrow = c(1, 2))
 perf = performance(pred, "tpr", "fpr")
 plot(perf)
 abline(a = 0, b = 1)
 plot(perf, type = "s")
 abline(a = 0, b = 1)
-auc_est = performance(pred, "auc")
-auc_est@y.values[[1]]
-est_auc(x = faw$x, y = faw$y)
+auc.estimated = performance(pred, "auc")
+yvalues(auc.estimated)
+est.auc(x = faw[, "x"], y = faw[, "y"])
 ```
 
-```{r}
+```{r, echo = FALSE}
 library(dplyr)
 fawcett = function(df) {
   L_sorted = df %>% 
@@ -360,10 +440,10 @@ fawcett = function(df) {
       R = rbind(R, c(fpr = fpr, tpr = tpr))
       f_prev = f_i
     }
-    if (L_sorted$y[i]) {
+    if (L_sorted[["y"]][i]) {
       TP = TP + 1
     }
-    if (!L_sorted$y[i]) {
+    if (!L_sorted[["y"]][i]) {
       FP = FP + 1
     }  
   }
@@ -377,7 +457,6 @@ seq_range = function(x, ...) {
   rx = range(x)
   seq(rx[1], rx[2], ...)
 }
-# seq_range(faw$x, )
 ```
 
 
@@ -386,8 +465,10 @@ seq_range = function(x, ...) {
 
 
 
-
-
+<!-- https://www.epeter-stats.de/roc-curves-and-ties/ -->
+<!-- http://blog.revolutionanalytics.com/2016/11/calculating-auc.html -->
+<!-- http://journals.plos.org/plosone/article?id=10.1371/journal.pone.0118432#pone-0118432-g002 -->
+<!-- https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2774909/ -->
 
 ```{r, engine='R', include = FALSE, eval = TRUE}
 unlink("profile.do")

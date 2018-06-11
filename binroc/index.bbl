@@ -1,4 +1,4 @@
-\begin{thebibliography}{4}
+\begin{thebibliography}{8}
 \newcommand{\enquote}[1]{``#1''}
 \providecommand{\natexlab}[1]{#1}
 \providecommand{\url}[1]{\texttt{#1}}
@@ -9,10 +9,35 @@
   \urlstyle{rm}\Url}\fi
 \providecommand{\eprint}[2][]{\url{#2}}
 
+\bibitem[{E \emph{et~al.}(2018)E, C, K, and et~al}]{jama}
+E M, C M, K S, et~al (2018).
+\newblock \enquote{Diagnostic criteria of ulcerative pyoderma gangrenosum: A
+  delphi consensus of international experts.}
+\newblock \emph{JAMA Dermatology}, \textbf{154}(4), 461--466.
+\newblock \doi{10.1001/jamadermatol.2017.5980}.
+\newblock
+  \eprint{/data/journals/derm/936924/jamadermatology_maverakis_2018_cs_170003.pdf},
+  \urlprefix\url{+ http://dx.doi.org/10.1001/jamadermatol.2017.5980}.
+
 \bibitem[{Fawcett(2006)}]{fawcett2006introduction}
 Fawcett T (2006).
 \newblock \enquote{An introduction to ROC analysis.}
 \newblock \emph{Pattern recognition letters}, \textbf{27}(8), 861--874.
+
+\bibitem[{Hanley and McNeil(1982)}]{hanley1982meaning}
+Hanley JA, McNeil BJ (1982).
+\newblock \enquote{The meaning and use of the area under a receiver operating
+  characteristic ({ROC}) curve.}
+\newblock \emph{Radiology}, \textbf{143}(1), 29--36.
+
+\bibitem[{Pedregosa \emph{et~al.}(2011)Pedregosa, Varoquaux, Gramfort, Michel,
+  Thirion, Grisel, Blondel, Prettenhofer, Weiss, Dubourg, Vanderplas, Passos,
+  Cournapeau, Brucher, Perrot, and Duchesnay}]{scikitlearn}
+Pedregosa F, Varoquaux G, Gramfort A, Michel V, Thirion B, Grisel O, Blondel M,
+  Prettenhofer P, Weiss R, Dubourg V, Vanderplas J, Passos A, Cournapeau D,
+  Brucher M, Perrot M, Duchesnay E (2011).
+\newblock \enquote{Scikit-learn: Machine Learning in {P}ython.}
+\newblock \emph{Journal of Machine Learning Research}, \textbf{12}, 2825--2830.
 
 \bibitem[{Peter(2016)}]{fbroc}
 Peter E (2016).
@@ -35,5 +60,15 @@ Sing T, Sander O, Beerenwinkel N, Lengauer T (2005).
 \newblock \enquote{{ROCR}: visualizing classifier performance in {R}.}
 \newblock \emph{Bioinformatics}, \textbf{21}(20), 7881.
 \newblock \urlprefix\url{http://rocr.bioinf.mpi-sb.mpg.de}.
+
+\bibitem[{TV \emph{et~al.}(2017)TV, GH, JA, S, K, and GY}]{jama2}
+TV L, GH B, JA C, S S, K K, GY O (2017).
+\newblock \enquote{A revised approach for the detection of sight-threatening
+  diabetic macular edema.}
+\newblock \emph{JAMA Ophthalmology}, \textbf{135}(1), 62--68.
+\newblock \doi{10.1001/jamaophthalmol.2016.4772}.
+\newblock
+  \eprint{/data/journals/ophth/935943/jamaophthalmology_litvin_2016_oi_160098.pdf},
+  \urlprefix\url{+ http://dx.doi.org/10.1001/jamaophthalmol.2016.4772}.
 
 \end{thebibliography}

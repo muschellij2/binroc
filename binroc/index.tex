@@ -8,10 +8,10 @@
 John Muschelli\\Department of Biostatistics, Johns Hopkins Bloomberg School of Public
 Health
 }
-\title{ROC and AUC in R with a Binary Predictor}
+\title{ROC and AUC with a Binary Predictor}
 
 \Plainauthor{John Muschelli}
-\Plaintitle{ROC and AUC in R with a Binary Predictor}
+\Plaintitle{ROC and AUC with a Binary Predictor}
 \Shorttitle{Binary Predictor ROC}
 
 \Abstract{
@@ -35,8 +35,10 @@ The abstract of the article.
   Health\\
   615 N Wolfe St Baltimore, MD 21205\\
   E-mail: \email{jmuschel@jhsph.edu}\\
-  URL: \url{http://johnmuschelli}.\\~\\
+  URL: \url{http://johnmuschelli.com}\\~\\
   }
+
+% Pandoc header
 
 \usepackage{amsmath}
 
@@ -47,16 +49,36 @@ The abstract of the article.
 
 In many applications, receiver operator characteristic (ROC) curves are
 used to show how a predictor compares to the true outcome. One of the
-large draws of th ROC curve is that it is threshold-agnostic; it shows
-the performace of a predictor without a specific threshold and also
-gives a criteria to choose an optimal threshold based on a certain cost
-function.
+large advantages of ROC analysis is that it is threshold-agnostic; it
+shows the performance of a predictor without a specific threshold and
+also gives a criteria to choose an optimal threshold based on a certain
+cost function. Typically, an ROC analysis shows how sensitivity changes
+with varying specificity.
 
 Many predictors, especially medical tests, result in a binary decision;
 a value is higher than a pre-determined threshold or not. Similarly,
 some are simply categorical or discrete; for example, blood pressure may
 be low, normal, or high. These are useful indicators of presence
-disease, which is a primary outcome of interest.
+disease, which is a primary outcome of interest. The predictive
+capabilities of the variable is summarized many times in the area under
+the curve (AUC). Additionally, partial ROC (pROC) analysis keeps a
+specificity fixed and determines the optimal sensitivity or the partial
+AUC (pAUC).
+
+One can assume the binary predictor is generated from a continuous
+distribution that has been thresholded. Therefore, the sensitivity of
+this thresholded predictor actually represents one point on the ROC
+curve of the true underlying continuous distribution. Therefore the ROC
+curve of a binary predictor is not really appropriate, but should be
+represented by a single point on the curve. But alas, ROC and AUC
+analysis is done on binary predictors and used to inform if one variable
+is more predictive than the other \citep[\citet{jama2}]{jama}. For
+example, these cases
+
+A more appropriate comparison of a continuous predictor and the binary
+predictor may be to compare the sensitivity and specificity (or overall
+accuracy) of the continuous predictor given the optimal threshold versus
+that of the binary predictor.
 
 \citet{fawcett2006introduction} describes (in Fig. 6) how ties are
 handled in a predictor. Ties are distinctly relevant for discrete and
@@ -65,92 +87,65 @@ where many observations can have the same value/risk score. When drawing
 the ROC curve, one can assume that all the ties do not correctly
 classify the outcome (Fawcett called the ``pessimistic'' approach) or
 that all the ties do correclty classify the outcome (called the
-``optimistic'' approach). But Fawcett notes: \textgreater{} Any mixed
-ordering of the instances will give a different set of step segments
-within the rectangle formed by these two extremes. However, the ROC
-curve should represent the \emph{expected} performance of the
+``optimistic'' approach). But Fawcett notes:
+
+\begin{quote}
+Any mixed ordering of the instances will give a different set of step
+segments within the rectangle formed by these two extremes. However, the
+ROC curve should represent the \emph{expected} performance of the
 classifier, which, lacking any other information, is the average of the
 pessimistic and optimistic segments.
+\end{quote}
 
-Therefore,
+This ``expected'' performance directly applies to the assignment of a
+half probability of success when the data are tied, which is implied by
+the ``trapezoidal rule'' from \citet{hanley1982meaning}. This half
+probability is linked to how ties are treated in the Wilcoxon rank sum
+test. As much of the theory of ROC curve testing, and therefore testing
+of differences in AUC, is based on the theory of the Wilcoxon rank-sum
+test, this treatment of ties is relevant to statistical inference.
 
-With some assumptions, you can think of the binary predictor as
-generating from a distribution of values from a continuous distribution
-that has been thresholded. Therefore, the sensitivity of this
-thresholded predictor actually represents one point on the ROC curve of
-the true underlying continuous distribution. Therefore the ROC curve of
-a binary predictor is not really appropriate. But alas, ROC and AUC
-analysis is done on binary predictors and used to inform if one variable
-is more predictive than the other.
-
-A more appropriate comparison of a continuous predictor and the binary
-predictor may be to compare the sensitivity and specificity (or overall
-accuracy) of the continuous predictor given the optimal threshold versus
-that of the binary predictor.
-
-This expectation directly applies to the assignment of a half
-probability of success when the data are tied. This half probability is
-linked to how ties are treated in the Wilcoxon rank sum test. As much of
-the theory of ROC curve testing, and therefore testing of differences in
-AUC, is based on the theory of the Wilcoxon rank-sum test, this
-treatment of ties is relevant to statistical inference.
-
-\begin{CodeChunk}
-
-\begin{CodeInput}
-R> library(cranlogs)
-R> library(ggplot2)
-R> library(dplyr)
-\end{CodeInput}
-\end{CodeChunk}
-
-In this tutorial, we will show the calculation of the AUC
-
-\hypertarget{simple-example}{%
-\section{Simple Example}\label{simple-example}}
-
-Here we will create a simple scenario where there is a binary predictor
-\(X\) and a binary outcome \(Y\).\\
-
-\begin{CodeChunk}
-
-\begin{CodeInput}
-R> x = c(rep(0, 52), rep(1, 32),
-R+       rep(0, 35), rep(1, 50))
-R> y = c(rep(0, 84), rep(1, 85))
-R> tab = table(x, y)
-R> tab
-\end{CodeInput}
-
-\begin{CodeOutput}
-   y
-x    0  1
-  0 52 35
-  1 32 50
-\end{CodeOutput}
-\end{CodeChunk}
+We show the commonly used software for calculating AUC may be misleading
+for binary or categorical predictors depending on the definition of the
+AUC.
 
 \hypertarget{mathematical-proof-of-auc-for-single-binary-predictor}{%
-\subsection{Mathematical Proof of AUC for Single Binary
+\section{Mathematical Proof of AUC for Single Binary
 Predictor}\label{mathematical-proof-of-auc-for-single-binary-predictor}}
 
-As there are only two outcomes for \(X\), we can expand the probability
-using the law of total probability: \begin{align}
+Let us assume we have a binary predictor \(X\) and a binary outcome
+\(Y\), such that \(X\) and \(Y\) only take the values \(0\) and 1. Let
+\(X_{i}\) be the values of \(X | Y = i\), where \(i \in \{0, 1\}\).
+
+Fawcett goes on to state: \textgreater{} AUC of a classifier is
+equivalent to the probability that the classifier will rank a randomly
+chosen positive instance higher than a randomly chosen negative
+instance.
+
+In other words, we \(\text{AUC} = P(X_{1} > X_{0})\). As there are only
+two outcomes for \(X\), we can expand this probability using the law of
+total probability:
+
+\begin{align}
 P(X_{1} > X_{0}) &= P(X_{1} > X_{0} | X_{1} = 1) P(X_{1} = 1) \nonumber \\
 &+ P(X_{1} > X_{0} | X_{1} = 0) P(X_{1} = 0) \label{eq:expand1} \\
 &= P(X_{1} > X_{0} | X_{1} = 1) P(X_{1} = 1) \label{eq:expand}
-\end{align} where the second term of equation \eqref{eq:expand1} is
-equal to zero because \(X_{0} \in \{0, 1\}\).
+\end{align}
 
-Here we see that the second term of equation \eqref{eq:expand} is the
-sensitivity: \begin{align*}
+as \(P(X_{1} > X_{0} | X_{1} = 0) = 0\) because \(X_{0} \in \{0, 1\}\).
+We see that \(P(X_{1} = 1)\) in equation \eqref{eq:expand} is the
+sensitivity:
+
+\begin{align*}
 P(X_{1} = 1) &= P(X = 1 | Y = 1)\\
 &= \frac{TP}{TP + FN} \\
 &= \text{sensitivity}
 \end{align*}
 
-Here we show the first term of equation \eqref{eq:expand} is the
-specificity: \begin{align*}
+and that \(P(X_{1} > X_{0} | X_{1} = 1)\) in equation \eqref{eq:expand}
+is the specificity:
+
+\begin{align*}
 P(X_{1} > X_{0} | X_{1} = 1) &= P(X_{1} > X_{0} | X_{1} = 1, X_{0} =1) P(X_{0} = 1) \\
 &+ P(X_{1} > X_{0} | X_{1} = 1, X_{0} =0) P(X_{0} = 0) \\
 &= P(X_{1} > X_{0} | X_{1} = 1, X_{0} =0) P(X_{0} = 0) \\
@@ -161,68 +156,81 @@ P(X_{1} > X_{0} | X_{1} = 1) &= P(X_{1} > X_{0} | X_{1} = 1, X_{0} =1) P(X_{0} =
 \end{align*}
 
 Therefore, we combine these two to show that equation \eqref{eq:expand}
-reduces to: \[
-P(X_{1} > X_{0}) = \text{specificity} * \text{sensitivity}
+reduces to:
+
+\[
+P(X_{1} > X_{0}) = \text{specificity} \times \text{sensitivity}
 \]
 
-Therefore, the true AUC should be equal to:
-\textbackslash{}begin\{CodeChunk\}
+\hypertarget{simple-example}{%
+\subsection{Simple Example}\label{simple-example}}
 
-\textbackslash{}begin\{CodeInput\} R\textgreater{} sens = tab{[}2,2{]} /
-sum(tab{[},2{]}) R\textgreater{} spec = tab{[}1,1{]} / sum(tab{[},1{]})
-R\textgreater{} true\_auc = sens * spec R\textgreater{} print(true\_auc)
-\textbackslash{}end\{CodeInput\}
+Let's assume \(X\) and \(Y\) have the following joint distribution:
+
+\begin{tabular}{l|r|r}
+\hline
+  & 0 & 1\\
+\hline
+0 & 52 & 35\\
+\hline
+1 & 32 & 50\\
+\hline
+\end{tabular}
+
+Therefore, the AUC should be equal to
+\(\frac{50}{85} \times \frac{52}{84}\), which equals:
+
+\begin{CodeChunk}
 
 \begin{CodeOutput}
 [1] 0.3641457
 \end{CodeOutput}
+\end{CodeChunk}
 
-\textbackslash{}end\{CodeChunk\}
+As this is the strict definition of AUC, let us call this
+\(\text{AUC}_{\text{definition}}\).
 
-\hypertarget{reverse-labeling}{%
-\subsubsection{Reverse Labeling}\label{reverse-labeling}}
+Note, if we reverse the labels, then the sensitivity and the specificity
+are estimated by \(1\) minus that measure, or
+\(\frac{35}{85} \times \frac{32}{84}\), which is equal to:
 
-\textbackslash{}begin\{CodeChunk\}
+\begin{CodeChunk}
 
-\textbackslash{}begin\{CodeInput\} R\textgreater{} flip\_auc = (1 -
-sens) * (1 - spec) R\textgreater{} print(flip\_auc)
-\textbackslash{}end\{CodeInput\}
+\begin{CodeInput}
+R> flip.auc = (1 - sens) * (1 - spec)
+R> print(flip.auc)
+\end{CodeInput}
 
 \begin{CodeOutput}
 [1] 0.1568627
 \end{CodeOutput}
+\end{CodeChunk}
 
-\textbackslash{}end\{CodeChunk\}
+Thus, as this AUC is less than the original labeling, we would choose
+that with the original labeling.
 
-\textbackslash{}begin\{CodeChunk\}
+If we change the definition of AUC slightly while accounting for ties,
+\(\text{AUC}_{\text{w/ties}}\) to \[
+\text{AUC}_{\text{w/ties}} = P(X_{1} > X_{0}) + \frac{1}{2} P(X_{1} = X_{0})
+\] we see that we would calculate the AUC by
+\(\text{AUC}_{\text{definition}} + \frac{1}{2}\left( \frac{50 + 52}{169}\right)\),
+which is equal to:
 
-\textbackslash{}begin\{CodeInput\} R\textgreater{} fpr = 1-spec
-R\textgreater{} area\_of\_tri = 1/2 * sens * fpr R\textgreater{}
-area\_of\_quad = sens * spec + 1/2 * spec * (1-sens) R\textgreater{} auc
-= area\_of\_tri + area\_of\_quad \textbackslash{}end\{CodeInput\}
-\textbackslash{}end\{CodeChunk\}
-
-We can also show that if we use a simple sampling method, we can
-estimate this true AUC. Here, the function \code{est_auc} samples
-10\^{}\{6\} random samples from \(X_{1}\) and \(X_{0}\), then calculates
-\(\hat{P}(X_{1} > X_{0})\):
-
-\textbackslash{}begin\{CodeChunk\}
-
-\textbackslash{}begin\{CodeInput\} R\textgreater{} est\_auc =
-function(x, y) \{ R+ x1 = x{[}y == 1{]} R+ x0 = x{[}y == 0{]} R+ n =
-1000000 R+ c1 = sample(x1, size = n, replace = TRUE) R+ c0 = sample(x0,
-size = n, replace = TRUE) R+ true\_auc = mean(c1 \textgreater{} c0) R+
-\# calc\_auc = true\_auc + 1/2 * mean(c1 == c0) R+ \# c(true\_auc,
-calc\_auc) R+ return(true\_auc) R+ \} R\textgreater{} sample\_est\_auc =
-est\_auc(x, y) R\textgreater{} sample\_est\_auc
-\textbackslash{}end\{CodeInput\}
+\begin{CodeChunk}
 
 \begin{CodeOutput}
-[1] 0.364663
+[1] 0.6036415
 \end{CodeOutput}
+\end{CodeChunk}
 
-\textbackslash{}end\{CodeChunk\}
+We will explore the estimated ROC curve and AUC from the implentations
+in the follwing \texttt{R} packages: \pkg{ROCR} \citep{ROCR},
+\pkg{caTools}, \pkg{pROC} \citep{pROC}, and \pkg{fbroc} \citep{fbroc}.
+We will also show these agree with the Python implementation in
+\texttt{sklearn.metrics} \citep{scikitlearn} and the Stata function
+\texttt{roctab}. We note that these functions all count half the
+probability of ties, which raises the AUC. We will present a geometric
+discussion of the ROC as well.
 
 \hypertarget{current-implementations}{%
 \section{Current Implementations}\label{current-implementations}}
@@ -230,11 +238,8 @@ est\_auc(x, y) R\textgreater{} sample\_est\_auc
 \hypertarget{r}{%
 \subsection{R}\label{r}}
 
-\hypertarget{catools-package}{%
-\subsubsection{caTools Package}\label{catools-package}}
-
-The \pkg{caTools} package is one of the most popular packages in R, and
-has analysis for doing area under the curve:
+The \pkg{caTools} package calculates AUC using the \texttt{colAUC}
+function:
 
 \begin{CodeChunk}
 
@@ -249,48 +254,61 @@ R> colAUC(x, y)
 \end{CodeOutput}
 \end{CodeChunk}
 
-\hypertarget{rocr-package}{%
-\subsubsection{ROCR Package}\label{rocr-package}}
+In \pkg{ROCR}, AUC is calculated from a \code{performance} object, which
+takes in a \code{prediction} object:
 
-The \pkg{ROCR} package is one of the most popular packages for doing ROC
-analysis \citep{ROCR}. Using \code{prediction} and \code{performance}
-functions, we see that the estimated AUC is much higher than the true
-AUC:
-
-\textbackslash{}begin\{CodeChunk\}
+\begin{CodeChunk}
 
 \begin{CodeInput}
 R> library(ROCR)
+R> yvalues = function(perf) {
+R+   unlist(slot(perf, "y.values"))
+R+ }
+R> xvalues = function(perf) {
+R+   unlist(slot(perf, "x.values"))
+R+ }
+R> 
+R> pred = prediction(x, y)
+R> auc.est = performance(pred, "auc")
+R> yvalues(auc.est)
 \end{CodeInput}
-
-\begin{CodeOutput}
-Loading required package: gplots
-\end{CodeOutput}
-
-\begin{CodeOutput}
-
-Attaching package: 'gplots'
-\end{CodeOutput}
-
-\begin{CodeOutput}
-The following object is masked from 'package:stats':
-
-    lowess
-\end{CodeOutput}
-
-\textbackslash{}begin\{CodeInput\} R\textgreater{} pred = prediction(x,
-y) R\textgreater{} auc\_est = performance(pred, ``auc'') R\textgreater{}
-\href{mailto:auc_est@y.values}{\nolinkurl{auc\_est@y.values}}{[}{[}1{]}{]}
-\textbackslash{}end\{CodeInput\}
 
 \begin{CodeOutput}
 [1] 0.6036415
 \end{CodeOutput}
+\end{CodeChunk}
 
-\textbackslash{}end\{CodeChunk\}
+The \pkg{pROC} package calculates AUC using the \texttt{roc} function:
 
-Looking at the plot for the ROC curve in ROCR, we can see why this may
-be:
+\begin{CodeChunk}
+
+\begin{CodeInput}
+R> library(pROC)
+R> pROC.roc = pROC::roc(predictor = x, response = y)
+R> pROC.roc[["auc"]]
+\end{CodeInput}
+
+\begin{CodeOutput}
+Area under the curve: 0.6036
+\end{CodeOutput}
+\end{CodeChunk}
+
+\begin{CodeChunk}
+
+
+\begin{center}\includegraphics{index_files/figure-latex/unnamed-chunk-8-1} \end{center}
+
+\end{CodeChunk}
+
+\begin{CodeChunk}
+
+
+\begin{center}\includegraphics{index_files/figure-latex/unnamed-chunk-9-1} \end{center}
+
+\end{CodeChunk}
+
+Looking at the plot for the ROC curve in \pkg{ROCR}, we can see why this
+may be:
 
 \begin{CodeChunk}
 
@@ -304,122 +322,171 @@ R> abline(a = 0, b = 1)
 \end{CodeInput}
 \end{CodeChunk}
 
+Looking geometrically at the plot, we can see how
+
 \begin{CodeChunk}
 
-
-\begin{center}\includegraphics{index_files/figure-latex/unnamed-chunk-10-1} \end{center}
-
-\end{CodeChunk}
-
-Looking geometrically at the plot, we can see how
-\textbackslash{}begin\{CodeChunk\}
-
-\textbackslash{}begin\{CodeInput\} R\textgreater{} fpr = 1 - spec
-R\textgreater{} area\_of\_left\_tri = 1/2 * sens * fpr R\textgreater{}
-area\_of\_top\_tri = 1/2 * spec * (1 - sens) R\textgreater{} false\_auc
-= area\_of\_left\_tri + true\_auc + area\_of\_top\_tri R\textgreater{}
-false\_auc \textbackslash{}end\{CodeInput\}
+\begin{CodeInput}
+R> fpr = 1 - spec
+R> left.tri = 1/2 * sens * fpr
+R> right.tri = 1/2 * spec * (1 - sens)
+R> false.auc = left.tri + auc.defn + right.tri
+R> false.auc
+\end{CodeInput}
 
 \begin{CodeOutput}
 [1] 0.6036415
 \end{CodeOutput}
-
-\textbackslash{}end\{CodeChunk\}
+\end{CodeChunk}
 
 \hypertarget{proc-package}{%
 \subsubsection{pROC Package}\label{proc-package}}
 
-The \pkg{pROC} package is one of the most popular packages for doing ROC
-analysis \citep{pROC}. Using \code{prediction} and \code{performance}
-functions, we see that the estimated AUC is much higher than the true
-AUC:
-
-\textbackslash{}begin\{CodeChunk\}
-
-\begin{CodeInput}
-R> library(pROC)
-\end{CodeInput}
-
-\begin{CodeOutput}
-Type 'citation("pROC")' for a citation.
-\end{CodeOutput}
-
-\begin{CodeOutput}
-
-Attaching package: 'pROC'
-\end{CodeOutput}
-
-\begin{CodeOutput}
-The following objects are masked from 'package:stats':
-
-    cov, smooth, var
-\end{CodeOutput}
-
-\textbackslash{}begin\{CodeInput\} R\textgreater{} pROC\_roc =
-pROC::roc(predictor = x, response = y) R\textgreater{}
-pROC\_roc{[}{[}``auc''{]}{]} \textbackslash{}end\{CodeInput\}
-
-\begin{CodeOutput}
-Area under the curve: 0.6036
-\end{CodeOutput}
-
-\textbackslash{}end\{CodeChunk\}
-
-\begin{CodeChunk}
-
-
-\begin{center}\includegraphics{index_files/figure-latex/unnamed-chunk-13-1} \end{center}
-
-\end{CodeChunk}
-
-\begin{CodeChunk}
-
-
-\begin{center}\includegraphics{index_files/figure-latex/unnamed-chunk-14-1} \end{center}
-
-\end{CodeChunk}
+\url{http://blog.revolutionanalytics.com/2016/11/calculating-auc.html}
 
 \hypertarget{fbroc-package}{%
 \subsubsection{fbroc Package}\label{fbroc-package}}
 
 The \pkg{fbroc} package is one of the most popular packages for doing
-ROC analysis \citep{fbroc}. Using \code{prediction} and
-\code{performance} functions, we see that the estimated AUC is much
-higher than the true AUC:
+ROC analysis \citep{fbroc}. Using the \texttt{fbroc::boot.roc} and
+\texttt{fbroc::perf} functions, we have:
+
+\begin{CodeChunk}
+
+\begin{CodeInput}
+R> library(fbroc)
+R> fbroc.default = boot.roc(x, as.logical(y), 
+R+                           n.boot = 1000, tie.strategy = 2)
+R> auc.def = perf(fbroc.default, "auc")
+R> auc.def[["Observed.Performance"]]
+\end{CodeInput}
+
+\begin{CodeOutput}
+[1] 0.6036415
+\end{CodeOutput}
+
+\begin{CodeInput}
+R> fbroc.alternative = boot.roc(x, as.logical(y), n.boot = 1000, tie.strategy = 1)
+R> auc.alt = perf(fbroc.alternative, "auc")
+R> auc.alt[["Observed.Performance"]]
+\end{CodeInput}
+
+\begin{CodeOutput}
+[1] 0.6036415
+\end{CodeOutput}
+\end{CodeChunk}
 
 \textbackslash{}begin\{CodeChunk\}
 
-\textbackslash{}begin\{CodeInput\} R\textgreater{} library(fbroc)
-R\textgreater{} fb\_roc\_default = boot.roc(x, as.logical(y), n.boot =
-1000, tie.strategy = 2) R\textgreater{} auc\_def =
-perf(fb\_roc\_default, ``auc'') R\textgreater{}
-auc\_def{[}{[}``Observed.Performance''{]}{]}
+\textbackslash{}begin\{CodeInput\} R\textgreater{} python\_figure =
+``python\_roc.png'' R\textgreater{} \# Taken from R\textgreater{} \#
+\url{https://qiita.com/bmj0114/items/460424c110a8ce22d945}
+R\textgreater{} sk = import(``sklearn.metrics'') R\textgreater{} plt =
+import(``matplotlib.pyplot'') R\textgreater{} py\_roc\_curve =
+sk\(roc_curve(y_score = x, y_true = y) R> names(py_roc_curve) = c("fpr", "tpr", "thresholds") R> roc_auc = sk\)auc(py\_roc\_curve\(fpr, py_roc_curve\)tpr)
+R\textgreater{} R\textgreater{} plt\$figure()
 \textbackslash{}end\{CodeInput\}
 
 \begin{CodeOutput}
-[1] 0.6036415
+Figure(640x480)
 \end{CodeOutput}
 
-\textbackslash{}begin\{CodeInput\} R\textgreater{} fb\_roc\_alternative
-= boot.roc(x, as.logical(y), n.boot = 1000, tie.strategy = 1)
-R\textgreater{} auc\_alt = perf(fb\_roc\_alternative, ``auc'')
-R\textgreater{} auc\_alt{[}{[}``Observed.Performance''{]}{]}
+\textbackslash{}begin\{CodeInput\} R\textgreater{}
+plt\(plot(py_roc_curve\)fpr, py\_roc\_curve\$tpr, color=`darkorange',
+lw=1, label= sprintf(`ROC curve (area = \%0.3f)', roc\_auc))
 \textbackslash{}end\{CodeInput\}
 
 \begin{CodeOutput}
-[1] 0.6036415
+[[1]]
+Line2D(ROC curve (area = 0.604))
 \end{CodeOutput}
+
+\begin{CodeInput}
+R> plt$plot(c(0, 1), c(0, 1), color='navy', lw=1, linestyle='--')
+\end{CodeInput}
+
+\begin{CodeOutput}
+[[1]]
+Line2D(_line1)
+\end{CodeOutput}
+
+\begin{CodeInput}
+R> plt$xlim(c(0.0, 1.0))
+\end{CodeInput}
+
+\begin{CodeOutput}
+[[1]]
+[1] 0
+
+[[2]]
+[1] 1
+\end{CodeOutput}
+
+\begin{CodeInput}
+R> plt$ylim(c(0.0, 1.05))
+\end{CodeInput}
+
+\begin{CodeOutput}
+[[1]]
+[1] 0
+
+[[2]]
+[1] 1.05
+\end{CodeOutput}
+
+\begin{CodeInput}
+R> plt$xlabel('False Positive Rate')
+\end{CodeInput}
+
+\begin{CodeOutput}
+Text(0.5,0,'False Positive Rate')
+\end{CodeOutput}
+
+\begin{CodeInput}
+R> plt$ylabel('True Positive Rate')
+\end{CodeInput}
+
+\begin{CodeOutput}
+Text(0,0.5,'True Positive Rate')
+\end{CodeOutput}
+
+\begin{CodeInput}
+R> plt$title('Receiver operating characteristic')
+\end{CodeInput}
+
+\begin{CodeOutput}
+Text(0.5,1,'Receiver operating characteristic')
+\end{CodeOutput}
+
+\textbackslash{}begin\{CodeInput\} R\textgreater{}
+plt\$legend(loc=``lower right'') \textbackslash{}end\{CodeInput\}
+
+\begin{CodeOutput}
+Legend
+\end{CodeOutput}
+
+\textbackslash{}begin\{CodeInput\} R\textgreater{}
+plt\$savefig(python\_figure) \textbackslash{}end\{CodeInput\}
+\textbackslash{}end\{CodeChunk\}
+
+\textbackslash{}begin\{CodeChunk\}
+
+\textbackslash{}begin\{CodeInput\} R\textgreater{}
+knitr::include\_graphics(python\_figure)
+\textbackslash{}end\{CodeInput\}
+
+\begin{center}\includegraphics[width=11.11in]{python_roc} \end{center}
 
 \textbackslash{}end\{CodeChunk\}
 
 \begin{CodeChunk}
 
 
-\begin{center}\includegraphics{index_files/figure-latex/unnamed-chunk-16-1} \end{center}
+\begin{center}\includegraphics{index_files/figure-latex/unnamed-chunk-15-1} \end{center}
 
 
 
-\begin{center}\includegraphics{index_files/figure-latex/unnamed-chunk-16-2} \end{center}
+\begin{center}\includegraphics{index_files/figure-latex/unnamed-chunk-15-2} \end{center}
 
 \end{CodeChunk}
 
@@ -443,18 +510,59 @@ R> roctab x y
 \end{CodeOutput}
 \end{CodeChunk}
 
+We can also show that if we use simple Monte Carlo sampling, we can
+estimate this true AUC, based on the definition above. Here, the
+function \code{est.auc} samples \(10^{6}\) random samples from \(X_{1}\)
+and \(X_{0}\), then calculates \(\hat{P}(X_{1} > X_{0})\):
+
+\begin{CodeChunk}
+
+\begin{CodeInput}
+R> est.auc = function(x, y, n = 1000000) {
+R+   x1 = x[y == 1] # sample x | y = 1
+R+   x0 = x[y == 0] # sample x | y = 0
+R+   c1 = sample(x1, size = n, replace = TRUE)
+R+   c0 = sample(x0, size = n, replace = TRUE)
+R+   auc.defn = mean(c1 > c0) # compare
+R+   auc.wties = auc.defn + 1/2 * mean(c1 == c0) # compare
+R+   return(c(auc.defn = auc.defn,
+R+            auc.wties = auc.wties))
+R+ }
+R> sample.estauc = est.auc(x, y)
+R> sample.estauc
+\end{CodeInput}
+
+\begin{CodeOutput}
+ auc.defn auc.wties 
+0.3646780 0.6039805 
+\end{CodeOutput}
+\end{CodeChunk}
+
+\begin{CodeChunk}
+\begin{figure}
+
+{\centering \includegraphics{index_files/figure-latex/unnamed-chunk-19-1} 
+
+}
+
+\caption[hey]{hey}\label{fig:unnamed-chunk-19}
+\end{figure}
+\end{CodeChunk}
+
+One should note, that
+
 \hypertarget{fawcett-example}{%
 \subsection{Fawcett Example}\label{fawcett-example}}
 
-\textbackslash{}begin\{CodeChunk\}
+\begin{CodeChunk}
 
 \begin{CodeInput}
 R> faw = data.frame(y = c(rep(TRUE, 6), rep(FALSE, 4)),
 R+                  x = c(0.99999, 0.99999, 0.99993, 
 R+                        0.99986, 0.99964, 0.99955, 
 R+                        0.68139, 0.50961, 0.48880, 0.44951))
-R> faw$hyp = faw$x > 0.5
-R> pred = prediction(predictions = faw$x, labels = faw$y)
+R> faw = faw %>% mutate(hyp = x > 0.5)
+R> pred = prediction(predictions = faw[, "x"], labels = faw[, "y"])
 R> par(mfrow = c(1, 2))
 R> perf = performance(pred, "tpr", "fpr")
 R> plot(perf)
@@ -466,42 +574,25 @@ R> abline(a = 0, b = 1)
 
 \begin{center}\includegraphics{index_files/figure-latex/fawcett-1} \end{center}
 
-\textbackslash{}begin\{CodeInput\} R\textgreater{} auc\_est =
-performance(pred, ``auc'') R\textgreater{}
-\href{mailto:auc_est@y.values}{\nolinkurl{auc\_est@y.values}}{[}{[}1{]}{]}
-\textbackslash{}end\{CodeInput\}
+
+\begin{CodeInput}
+R> auc.estimated = performance(pred, "auc")
+R> yvalues(auc.estimated)
+\end{CodeInput}
 
 \begin{CodeOutput}
 [1] 1
 \end{CodeOutput}
 
-\textbackslash{}begin\{CodeInput\} R\textgreater{} est\_auc(x =
-faw\(x, y = faw\)y) \textbackslash{}end\{CodeInput\}
+\begin{CodeInput}
+R> est.auc(x = faw[, "x"], y = faw[, "y"])
+\end{CodeInput}
 
 \begin{CodeOutput}
-[1] 1
+ auc.defn auc.wties 
+        1         1 
 \end{CodeOutput}
-
-\textbackslash{}end\{CodeChunk\}
-
-\textbackslash{}begin\{CodeChunk\}
-
-\textbackslash{}begin\{CodeInput\} R\textgreater{} library(dplyr)
-R\textgreater{} fawcett = function(df) \{ R+ L\_sorted = df
-\%\textgreater{}\% R+ arrange(desc(x), y) R+ n\_sample = nrow(L\_sorted)
-R+ P = sum(L\_sorted{[}{[}``y''{]}{]}) R+ N = n\_sample - P R+ FP = TP =
-0 R+ R = NULL R+ f\_prev = -Inf R+ i = 1 R+ for (i in seq(n\_sample)) \{
-R+ f\_i = L\_sorted{[}{[}``x''{]}{]}{[}i{]} R+ if (f\_i != f\_prev) \{
-R+ fpr = FP/N R+ tpr = TP / P R+ R = rbind(R, c(fpr = fpr, tpr = tpr))
-R+ f\_prev = f\_i R+ \} R+ if
-(L\_sorted\(y[i]) { R+ TP = TP + 1 R+ } R+ if (!L_sorted\)y{[}i{]}) \{
-R+ FP = FP + 1 R+ \}\\
-R+ \} R+ fpr = FP/N R+ tpr = TP / P R+ R = rbind(R, c(fpr = fpr, tpr =
-tpr)) R+ return(R) R+ \} R\textgreater{} fawcett\_roc = fawcett(df)
-R\textgreater{} seq\_range = function(x, \ldots{}) \{ R+ rx = range(x)
-R+ seq(rx{[}1{]}, rx{[}2{]}, \ldots{}) R+ \} R\textgreater{} \#
-seq\_range(faw\$x, ) \textbackslash{}end\{CodeInput\}
-\textbackslash{}end\{CodeChunk\}
+\end{CodeChunk}
 
 \bibliography{binroc.bib}
 
