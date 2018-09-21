@@ -1,4 +1,4 @@
-\begin{thebibliography}{8}
+\begin{thebibliography}{19}
 \newcommand{\enquote}[1]{``#1''}
 \providecommand{\natexlab}[1]{#1}
 \providecommand{\url}[1]{\texttt{#1}}
@@ -8,6 +8,35 @@
   \providecommand{\doi}{doi:\discretionary{}{}{}\begingroup
   \urlstyle{rm}\Url}\fi
 \providecommand{\eprint}[2][]{\url{#2}}
+
+\bibitem[{Bamber(1975)}]{bamber1975area}
+Bamber D (1975).
+\newblock \enquote{The area above the ordinal dominance graph and the area
+  below the receiver operating characteristic graph.}
+\newblock \emph{Journal of mathematical psychology}, \textbf{12}(4), 387--415.
+
+\bibitem[{Blumberg \emph{et~al.}(2016)Blumberg, De~Moraes, Liebmann, Garg,
+  Chen, Theventhiran, and Hood}]{blumberg2016technology}
+Blumberg DM, De~Moraes CG, Liebmann JM, Garg R, Chen C, Theventhiran A, Hood DC
+  (2016).
+\newblock \enquote{Technology and the glaucoma suspect.}
+\newblock \emph{Investigative ophthalmology \& visual science}, \textbf{57}(9),
+  OCT80--OCT85.
+
+\bibitem[{Budwega \emph{et~al.}(2016)Budwega, Sprengerb, De~Vere-Tyndalld,
+  Hagenkordd, Stippichd, and Bergera}]{budwega2016factors}
+Budwega J, Sprengerb T, De~Vere-Tyndalld A, Hagenkordd A, Stippichd C, Bergera
+  CT (2016).
+\newblock \enquote{Factors associated with significant {MRI} findings in
+  medical walk-in patients with acute headache.}
+\newblock \emph{Swiss Med Wkly}, \textbf{146}, w14349.
+
+\bibitem[{DeLong \emph{et~al.}(1988)DeLong, DeLong, and
+  Clarke-Pearson}]{delong}
+DeLong ER, DeLong DM, Clarke-Pearson DL (1988).
+\newblock \enquote{Comparing the areas under two or more correlated receiver
+  operating characteristic curves: a nonparametric approach.}
+\newblock \emph{Biometrics}, pp. 837--845.
 
 \bibitem[{E \emph{et~al.}(2018)E, C, K, and et~al}]{jama}
 E M, C M, K S, et~al (2018).
@@ -24,11 +53,28 @@ Fawcett T (2006).
 \newblock \enquote{An introduction to ROC analysis.}
 \newblock \emph{Pattern recognition letters}, \textbf{27}(8), 861--874.
 
+\bibitem[{Glaveckaite \emph{et~al.}(2011)Glaveckaite, Valeviciene, Palionis,
+  Skorniakov, Celutkiene, Tamosiunas, Uzdavinys, and
+  Laucevicius}]{glaveckaite2011value}
+Glaveckaite S, Valeviciene N, Palionis D, Skorniakov V, Celutkiene J,
+  Tamosiunas A, Uzdavinys G, Laucevicius A (2011).
+\newblock \enquote{Value of scar imaging and inotropic reserve combination for
+  the prediction of segmental and global left ventricular functional recovery
+  after revascularisation.}
+\newblock \emph{Journal of Cardiovascular Magnetic Resonance}, \textbf{13}(1),
+  35.
+
 \bibitem[{Hanley and McNeil(1982)}]{hanley1982meaning}
 Hanley JA, McNeil BJ (1982).
 \newblock \enquote{The meaning and use of the area under a receiver operating
   characteristic ({ROC}) curve.}
 \newblock \emph{Radiology}, \textbf{143}(1), 29--36.
+
+\bibitem[{Hsu and Lieli(2014)}]{hsu2014inference}
+Hsu YC, Lieli R (2014).
+\newblock \enquote{Inference for {ROC} curves based on estimated predictive
+  indices: A note on testing {AUC} = 0.5.}
+\newblock \emph{Unpublished manuscript}.
 
 \bibitem[{Pedregosa \emph{et~al.}(2011)Pedregosa, Varoquaux, Gramfort, Michel,
   Thirion, Grisel, Blondel, Prettenhofer, Weiss, Dubourg, Vanderplas, Passos,
@@ -38,6 +84,13 @@ Pedregosa F, Varoquaux G, Gramfort A, Michel V, Thirion B, Grisel O, Blondel M,
   Brucher M, Perrot M, Duchesnay E (2011).
 \newblock \enquote{Scikit-learn: Machine Learning in {P}ython.}
 \newblock \emph{Journal of Machine Learning Research}, \textbf{12}, 2825--2830.
+
+\bibitem[{Pepe \emph{et~al.}(2009)Pepe, Longton, and
+  Janes}]{pepe2009estimation}
+Pepe M, Longton G, Janes H (2009).
+\newblock \enquote{Estimation and comparison of receiver operating
+  characteristic curves.}
+\newblock \emph{The Stata Journal}, \textbf{9}(1), 1.
 
 \bibitem[{Peter(2016)}]{fbroc}
 Peter E (2016).
@@ -54,12 +107,35 @@ Robin X, Turck N, Hainard A, Tiberti N, Lisacek F, Sanchez JC, Müller M
   and compare {ROC} curves.}
 \newblock \emph{BMC Bioinformatics}, \textbf{12}, 77.
 
+\bibitem[{Saito and Rehmsmeier(2015)}]{saito2015precision}
+Saito T, Rehmsmeier M (2015).
+\newblock \enquote{The precision-recall plot is more informative than the {ROC}
+  plot when evaluating binary classifiers on imbalanced datasets.}
+\newblock \emph{PloS one}, \textbf{10}(3), e0118432.
+
+\bibitem[{SAS and Version(2017)}]{sas}
+SAS S, Version S (2017).
+\newblock \enquote{9.4 [Computer Program].}
+\newblock \emph{Cary, NC: SAS Institute}.
+
 \bibitem[{Sing \emph{et~al.}(2005)Sing, Sander, Beerenwinkel, and
   Lengauer}]{ROCR}
 Sing T, Sander O, Beerenwinkel N, Lengauer T (2005).
 \newblock \enquote{{ROCR}: visualizing classifier performance in {R}.}
 \newblock \emph{Bioinformatics}, \textbf{21}(20), 7881.
 \newblock \urlprefix\url{http://rocr.bioinf.mpi-sb.mpg.de}.
+
+\bibitem[{Stata(2013)}]{stata}
+Stata S (2013).
+\newblock \enquote{Release 13. Statistical software.}
+\newblock \emph{StataCorp LP, College Station, TX}.
+
+\bibitem[{Tuszynski(2018)}]{caTools}
+Tuszynski J (2018).
+\newblock \emph{{caTools}: Tools: moving window statistics, {GIF}, {Base64},
+  {ROC} {AUC}, etc.}
+\newblock R package version 1.17.1.1,
+  \urlprefix\url{https://CRAN.R-project.org/package=caTools}.
 
 \bibitem[{TV \emph{et~al.}(2017)TV, GH, JA, S, K, and GY}]{jama2}
 TV L, GH B, JA C, S S, K K, GY O (2017).
