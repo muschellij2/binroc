@@ -14,7 +14,7 @@ title:
   # For running headers, if needed
   short:     "Binary Predictor ROC"
 abstract: >
-  In analysis of binary outcomes, the receiver operator characteristic (ROC) curve is heavily used to show the performance of a model or algorithm.  The ROC curve is informative about the performance over a series of thresholds and can be summarized by the area under the curve (AUC), a single number.  When a **predictor** is categorical, the ROC curve has only as many thresholds as the one less than number of categories; when the predictor is binary there is only one threshold.   As the AUC may be used in decision-making processes on determining the best model, it important to discuss how it agrees with the intuition from the ROC curve.  We discuss how the interpolation of the curve between thresholds with binary predictors can largely change the AUC.  Overall, we believe a linear interpolation from the ROC curve with binary predictors, which is most commonly done in software, can  lead to misleading results.
+  In analysis of binary outcomes, the receiver operator characteristic (ROC) curve is heavily used to show the performance of a model or algorithm.  The ROC curve is informative about the performance over a series of thresholds and can be summarized by the area under the curve (AUC), a single number.  When a **predictor** is categorical, the ROC curve has only as many thresholds as the one less than number of categories; when the predictor is binary there is only one threshold.   As the AUC may be used in decision-making processes on determining the best model, it important to discuss how it agrees with the intuition from the ROC curve.  We discuss how the interpolation of the curve between thresholds with binary predictors can largely change the AUC.  Overall, we believe a linear interpolation from the ROC curve with binary predictors, which is most commonly done in software, corresponding to the estimated AUC.  We believe these ROC curves and AUC can lead to misleading results. We compare R, Python, Stata, and SAS software implementations.
 keywords:
   # at least one keyword must be supplied
   formatted: [roc, auc, area under the curve, "\\proglang{R}"]
@@ -22,6 +22,8 @@ keywords:
 preamble: >
   \usepackage{amsmath}
   \usepackage{subfig}
+  \usepackage{float}
+  \renewcommand{\thesubfigure}{\Alph{subfigure}}
 output: 
   rticles::jss_article:
     includes:  
@@ -31,11 +33,14 @@ bibliography: binroc.bib
 
 
 ```{r setup, include = FALSE}
+# devtools::install_github("yihui/knitr@0da648bff63d3c4234ea4a19bd9cd62e45efa42a")
+library(knitr)
+library(kableExtra)
 knitr::opts_chunk$set(
   collapse = TRUE,
   message = FALSE, warning = FALSE, 
   comment = "")
-knitr::opts_chunk$set(fig.pos = "h")
+knitr::opts_chunk$set(fig.pos = "H")
 run_python = FALSE
 library(reticulate)
 library(tidyverse)
@@ -50,26 +55,24 @@ knitr::knit_engines$set(python = reticulate::eng_python)
 
 # Introduction
 
-In many applications, receiver operator characteristic (ROC) curves are used to show how a predictor compares to the true outcome.   One of the large advantages of ROC analysis is that it is threshold-agnostic; performance of a predictor is estimated without a specific threshold and also gives a criteria to choose an optimal threshold based on a certain cost function or objective.  Typically, an ROC analysis shows how sensitivity (true positive rate) changes with varying specificity (true negative rate or $1 - \text{false positive rate}$).  Analyses also typically weigh false positives and false negatives equally.  
+In many applications, receiver operator characteristic (ROC) curves are used to show how a predictor compares to the true outcome.   One of the large advantages of ROC analysis is that it is threshold-agnostic; performance of a predictor is estimated without a specific threshold and also gives a criteria to choose an optimal threshold based on a certain cost function or objective.  Typically, an ROC analysis shows how sensitivity (true positive rate) changes with varying specificity (true negative rate or $1 - \text{false positive rate}$).  Analyses also typically weigh false positives and false negatives equally.  In ROC analyses, the predictive capabilities of a variable is commonly summarized by the area under the curve (AUC), which can be found by integrating areas under the line segments.  We will discuss how interpolation between these line segments affect the visualization of the ROC curve and corresponding AUC.  Additionally, partial ROC (pROC) analysis keeps a specificity fixed and can summarize a predictor by the partial AUC (pAUC) or the optimal sensitivity at that fixed false positive rate.  
 
-Many predictors, especially medical tests, result in a binary decision; a value is higher than a pre-determined threshold or a substance is present.  Similarly, some predictors are simply categorical or discrete such as low, normal, or high blood pressure while others are categorical by nature such as having a specific gene or not.  These are useful indicators of presence a disease, the primary outcome of interest.  The predictive capabilities of the variable is commonly summarized by the area under the curve (AUC).  Additionally, partial ROC (pROC) analysis keeps a specificity fixed and can summarize a predictor by the partial AUC (pAUC) or the optimal sensitivity at that fixed false positive rate.  
+Many predictors, especially medical tests, result in a binary decision; a value is higher than a pre-determined threshold or a substance is present.  Similarly, some predictors are commonly collected as categorical or discrete such as low, normal, or high blood pressure while others are categorical by nature such as having a specific gene or not.  These are useful indicators of presence a disease, which is a primary outcome of interest in medical settings, and are used heavily in analysis.
 
-If one assumes the binary predictor is generated from a continuous distribution that has been thresholded, then the sensitivity of this thresholded predictor actually represents one point on the ROC curve for the underlying continuous value.  Therefore the ROC curve of a binary predictor is not really appropriate, but should be represented by a single point on the curve.  But alas, ROC and AUC analysis is done on binary predictors and used to inform if one variable is more predictive than the other [@jama; @jama2; @glaveckaite2011value; @blumberg2016technology; @budwega2016factors; @mwipatayi].  For example, these cases show that researchers use ROC curves and AUC to evaluate predictors, even when the predictors are categorical or binary.  Although there is nothing inherently wrong with this comparison, it can lead to drastically different predictors being selected based on these criteria if ties are treated slightly different ways. 
+If one assumes the binary predictor is generated from a continuous distribution that has been thresholded, then the sensitivity of this thresholded predictor actually represents one point on the ROC curve for the underlying continuous value.  Therefore the ROC curve of a binary predictor is not really appropriate, but should be represented by a single point on the curve.  But alas, ROC and AUC analysis is done on binary predictors and used to inform if one variable is more predictive than the other [@jama; @jama2; @glaveckaite2011value; @blumberg2016technology; @budwega2016factors; @mwipatayi2016durability].  For example, these cases show that researchers use ROC curves and AUC to evaluate predictors, even when the predictors are categorical or binary.  Although there is nothing inherently wrong with this comparison, it can lead to drastically different predictors being selected based on these criteria if ties are treated slightly different ways. A more appropriate comparison of a continuous predictor and the binary predictor may be to compare the sensitivity and specificity (or overall accuracy) of the continuous predictor given the optimal threshold versus that of the binary predictor.  
 
-A more appropriate comparison of a continuous predictor and the binary predictor may be to compare the sensitivity and specificity (or overall accuracy) of the continuous predictor given the optimal threshold versus that of the binary predictor.  
-
-@fawcett2006introduction describes how ties are handled in a predictor.  Ties are distinctly relevant for discrete and binary predictors or models that predict a discrete number of values, where many observations can have the same value/risk score.  When drawing the ROC curve, one can assume that all the ties do not correctly classify the outcome (Fawcett called the "pessimistic" approach) or that all the ties do correctly classify the outcome (called the "optimistic" approach), see Fig. 6 in [@fawcett2006introduction].  But Fawcett notes (emphasis in original): 
+As categorical/binary predictors only have a relatively small number of categories, how ties are handled are distinctly relevant.  Thus, many observations may have the same value/risk score.  @fawcett2006introduction describes the standard way of how ties are handled in a predictor: a probability of $\frac{1}{2}$ is given for the cases when the predictors are tied.  When drawing the ROC curve, one can assume that all the ties do not correctly classify the outcome (Fawcett called the "pessimistic" approach) or that all the ties do correctly classify the outcome (called the "optimistic" approach), see Fig. 6 in [@fawcett2006introduction].  But Fawcett notes (emphasis in original): 
 
 > Any mixed ordering of the instances will give a different set of step segments within the rectangle formed by these two extremes. However, the ROC curve should represent the *expected* performance of the classifier, which, lacking any other information, is the average of the pessimistic and optimistic segments. 
 
-This "expected" performance directly applies to the assignment of a half probability of success when the data are tied, which is implied by the "trapezoidal rule" from @hanley1982meaning.  @fawcett2006introduction also states in the calculation of AUC that "trapezoids are used rather than rectangles in order to average the effect between points".  This trapezoidal rule applies additional areas to the AUC based on ties of the predictor, giving a half a probability.  This addition of half probability is linked to how ties are treated in the Wilcoxon rank sum test.  As much of the theory of ROC curve testing, and therefore testing of differences in AUC, is based on the theory of the Wilcoxon rank-sum test, this treatment of ties is relevant to statistical inference.  
+This "expected" performance directly applies to the assignment of a half probability of success when the data are tied, which is implied by the "trapezoidal rule" from @hanley1982meaning.  @fawcett2006introduction also states in the calculation of AUC that "trapezoids are used rather than rectangles in order to average the effect between points".  This trapezoidal rule applies additional areas to the AUC based on ties of the predictor, giving a half a probability.  This addition of half probability is linked to how ties are treated in the Wilcoxon rank sum test.  As much of the theory of ROC curve testing, and therefore testing of differences in AUC, is based on the theory of the Wilcoxon rank-sum test, this treatment of ties is also relevant to statistical inference and not only AUC estimation.  
 
 
 
 Others have discussed insights into binary predictors in addition to @fawcett2006introduction, but they are mentioned in small sections of the paper [@saito2015precision; @pepe2009estimation].  Other information regarding ties and binary data are blog posts or working papers such as  http://blog.revolutionanalytics.com/2016/11/calculating-auc.html
 or https://www.epeter-stats.de/roc-curves-and-ties/, which was written by the author of the \pkg{fbroc} [@fbroc] package, which we will discuss below.  Most notably, @hsu2014inference is an extensive discussion of ties, but the paper was not published.  
 
-Although many discuss the properties of ROC and AUC analyses, we wish to plainly show the math and calculations of the AUC with a binary predictor explore commonly-used statistical software for ROC curve creation and AUC calculation in a variety of packages and languages.  Overall, we believe that AUC calculations alone may be misleading for binary or categorical predictors depending on the definition of the AUC. We propose to be explicit when reporting the AUC in terms of the approach to ties.
+Although many discuss the properties of ROC and AUC analyses, we wish to first show the math and calculations of the AUC with a binary predictor and we then explore commonly-used statistical software for ROC curve creation and AUC calculation in a variety of packages and languages.  Overall, we believe that AUC calculations alone may be misleading for binary or categorical predictors depending on the definition of the AUC. We propose to be explicit when reporting the AUC in terms of the approach to ties.
 
 ```{r, message=FALSE, echo = FALSE}
 library(cranlogs)
@@ -83,13 +86,13 @@ library(dplyr)
 
 # Mathematical Proof of AUC for Single Binary Predictor
 
-First, we will show how the AUC is defined in terms of probability.  This representation is helpful in discussing the disconnect between the stated interpretation of the AUC, the formal definition, and how the treatment of ties is crucial when the data are discrete. Let us assume we have a binary predictor $X$ and a binary outcome $Y$, such that $X$ and $Y$ only take the values $0$ and 1, the number of replicates is not relevant here.   Let $X_{i}$ be the values of $X | Y = i$, where $i \in \{0, 1\}$.  
+First, we will show how the AUC is defined in terms of probability.  This representation is helpful in discussing the connection between the stated interpretation of the AUC, the formal definition and calculation used in software, and how the treatment of ties is crucial when the data are discrete. Let us assume we have a binary predictor $X$ and a binary outcome $Y$, such that $X$ and $Y$ only take the values $0$ and 1, the number of replicates is not relevant here.   Let $X_{i}$ be the values of $X | Y = i$, where $i \in \{0, 1\}$.  
 
 @fawcett2006introduction goes on to state:
 
 > AUC of a classifier is equivalent to the probability that the classifier will rank a randomly chosen positive instance higher than a randomly chosen negative instance. 
 
-In other words, we could discern the definition $\text{AUC} = P(X_{1} > X_{0})$.  As there are only two outcomes for $X$, we can expand this probability using the law of total probability:
+In other words, we could discern the definition $\text{AUC} = P(X_{1} > X_{0})$.  Note, the definition here adds no value when the classifier is tied, this is a strict inequality.  As there are only two outcomes for $X$, we can expand this probability using the law of total probability:
 
 \begin{align}
 P(X_{1} > X_{0}) &= P(X_{1} > X_{0} | X_{1} = 1) P(X_{1} = 1) \nonumber \\
@@ -97,7 +100,7 @@ P(X_{1} > X_{0}) &= P(X_{1} > X_{0} | X_{1} = 1) P(X_{1} = 1) \nonumber \\
 &= P(X_{1} > X_{0} | X_{1} = 1) P(X_{1} = 1) \label{eq:expand}
 \end{align}
 
-as $P(X_{1} > X_{0} | X_{1} = 0) = 0$ because $X_{0} \in \{0, 1\}$. We see that  $P(X_{1} = 1)$ in equation \eqref{eq:expand} is the sensitivity:
+as $P(X_{1} > X_{0} | X_{1} = 0) = 0$ because $X_{0}$ and $X_{1}$ are  in $\{0, 1\}$. We see that  $P(X_{1} = 1)$ in equation \eqref{eq:expand} is the sensitivity:
 
 \begin{align*}
 P(X_{1} = 1) &= P(X = 1 | Y = 1)\\
@@ -117,35 +120,38 @@ P(X_{1} > X_{0} | X_{1} = 1) &= P(X_{1} > X_{0} | X_{1} = 1, X_{0} =1) P(X_{0} =
 &= \text{specificity}
 \end{align*}
 
-Therefore, we combine these two to show that equation \eqref{eq:expand} reduces to:
+We combine these two to show that equation \eqref{eq:expand} reduces to:
 
 $$
 P(X_{1} > X_{0}) = \text{specificity} \times \text{sensitivity}
 $$
 
-Using the definition of AUC as $P(X_{1} > X_{0})$, it is the sensitivity times the specificity.
+Thus, using the definition as $P(X_{1} > X_{0})$, the AUC of a binary predictor is simply the sensitivity times the specificity.
 
 
-If we change the definition of AUC slightly while accounting for ties, which we call $\text{AUC}_{\text{w/ties}}$, to 
+Let us change the definition of AUC slightly while accounting for ties, which we call $\text{AUC}_{\text{w/ties}}$, to:
 $$
 \text{AUC}_{\text{w/ties}} = P(X_{1} > X_{0}) + \frac{1}{2} P(X_{1} = X_{0})
 $$
-This AUC is the one reported by most software, as we will see below. 
+which corresponds to the common definition of AUC.  This AUC is the one reported by most software, as we will see below. 
 
 
 
 
 ## Simple Concrete Example
 
-To give some intuition of this scenario, we will assume $X$ and $Y$ have the following joint distribution, where $X$ is along the rows and $Y$ is along the columns: 
+To give some intuition of this scenario, we will assume $X$ and $Y$ have the following joint distribution, where $X$ is along the rows and $Y$ is along the columns, as in Table \ref{tab:create_tab}.
 
-```{r create_tab, echo =FALSE , results = "asis"}
+```{r make_data, echo = FALSE , results = "asis", out.extra = ''}
 x = c(rep(0, 52), rep(1, 32),
       rep(0, 35), rep(1, 50))
 y = c(rep(0, 84), rep(1, 85))
 tab = table(x, y)
-knitr::kable(tab, format = "latex", 
-             caption = "A simple 2x2 table of a binary predictor (rows) versus a binary outcome (columns)") %>% 
+```
+
+```{r create_tab, echo = FALSE}
+knitr::kable(tab, 
+             caption = "A simple 2x2 table of a binary predictor (rows) versus a binary outcome (columns)", valign = "ht") %>% 
   kableExtra::kable_styling(position = "center")
 ```
 
@@ -157,7 +163,7 @@ auc.defn = sens * spec
 ```
 
 
-Therefore, the AUC should be equal to $\frac{`r tab[2,2]`}{`r sum(tab[,2])`} \times \frac{`r tab[1,1]`}{`r sum(tab[,1])`}$, which equals `r round(auc.defn, 3)`.
+Therefore, the AUC should be equal to $\frac{`r tab[2,2]`}{`r sum(tab[,2])`} \times \frac{`r tab[1,1]`}{`r sum(tab[,1])`}$, which equals `r round(auc.defn, 3)`.  This estimated AUC will be reported throughout the majority of this paper, so note the value.
 
 We will define this as the the strict definition of AUC, where ties are not taken into account and we are using strictly greater than in the probability and will call this value $\text{AUC}_{\text{definition}}$.
 
@@ -166,9 +172,7 @@ flip.auc = (1 - sens) * (1 - spec)
 # print(flip.auc)
 ```
 
-Note, if we reverse the labels, then the sensitivity and the specificity are estimated by $1$ minus that measure, or $\frac{`r tab[1,2]`}{`r sum(tab[,2])`} \times \frac{`r tab[2,1]`}{`r sum(tab[,1])`}$, which is equal to  `r round(flip.auc, 3)`.
-
-Thus, as this AUC is less than the original labeling, we would choose that with the original labeling.  
+Note, if we reverse the labels, then the sensitivity and the specificity are estimated by $1$ minus that measure, or $\frac{`r tab[1,2]`}{`r sum(tab[,2])`} \times \frac{`r tab[2,1]`}{`r sum(tab[,1])`}$, which is equal to  `r round(flip.auc, 3)`.  Thus, as this AUC is less than the original labeling, we would choose that with the original labeling.  
 
 ```{r, echo = FALSE}
 fpr = 1 - spec
@@ -182,23 +186,24 @@ auc = area_of_tri + area_of_quad
 # print(auc)
 ```
 
-If we used the calculation for $\text{AUC}_{\text{w/ties}}$ we see that we estimate AUC by $\text{AUC}_{\text{definition}} + \frac{1}{2}\left( \frac{`r tab[2,2]` + `r tab[1,1]`}{`r sum(tab)`}\right)$, which is equal to `r round(auc, 3)`.  
+If we used the calculation for $\text{AUC}_{\text{w/ties}}$ we see that we estimate AUC by $\text{AUC}_{\text{definition}} + \frac{1}{2}\left( \frac{`r tab[2,2]` + `r tab[1,1]`}{`r sum(tab)`}\right)$, which is equal to `r round(auc, 3)`.  We will show that most software report this AUC estimate.
 
 ### Monte Carlo Estimation of AUC
 ```{r, echo = FALSE}
 n = 1000000
 ```
 
-We can also show that if we use simple Monte Carlo sampling, we can randomly choose $X_{0}$ and $X_{1}$.  From these samples, we can estimate these AUC based on the definitions above.  Here, the function \code{est.auc} samples $`r n`$ random samples from $X_{1}$ and $X_{0}$, then calculates $\widehat{\text{AUC}}_{\text{definition}}$ and $\widehat{\text{AUC}}_{\text{w/ties}}$:
+We can also show that if we use simple Monte Carlo sampling, we can randomly choose $X_{0}$ and $X_{1}$.  From these samples, we can estimate these AUC based on the definitions above.  Here, the function \code{est.auc} samples $`r n`$ random samples from $X_{1}$ and $X_{0}$,
+determines which is greater, or if they are tied, and then calculates $\widehat{\text{AUC}}_{\text{definition}}$ and $\widehat{\text{AUC}}_{\text{w/ties}}$:
 
 ```{r}
 est.auc = function(x, y, n = 1000000) {
-  x1 = x[y == 1] # sample x | y = 1
-  x0 = x[y == 0] # sample x | y = 0
+  x1 = x[y == 1] # x | y = 1
+  x0 = x[y == 0] # x | y = 0
   c1 = sample(x1, size = n, replace = TRUE)
   c0 = sample(x0, size = n, replace = TRUE)
-  auc.defn = mean(c1 > c0) # compare
-  auc.wties = auc.defn + 1/2 * mean(c1 == c0) # compare
+  auc.defn = mean(c1 > c0) # strictly greater
+  auc.wties = auc.defn + 1/2 * mean(c1 == c0) # half for ties
   return(c(auc.definition = auc.defn,
            auc.wties = auc.wties))
 }
@@ -206,11 +211,11 @@ sample.estauc = est.auc(x, y)
 sample.estauc
 ```
 
-And thus we see these simulations agree with the values estimated above.
+And thus we see these simulations agree with the values estimated above, with negligible Monte Carlo error.
 
 ### Geometric Argument of AUC
 
-We will present a geometric discussion of the ROC as well.  In Figure \ref{fig:main}, we show the ROC curve for the simple concrete example.  In panel A, we show the point of sensitivity/specificity connected by the step function, and the associated AUC is represented in the shaded blue area, representing $\text{AUC}_{\text{definition}}$.  In panel B, we show the additional shaded areas that are due to ties in orange and red; all shaded areas represent $\text{AUC}_{\text{w/ties}}$.  We can see this by expanding $P(X_{1} = X_{0})$ such that:
+We will present a geometric discussion of the ROC as well.  In Figure \ref{fig:main}, we show the ROC curve for the simple concrete example.  In panel A, we show the point of sensitivity/specificity connected by the step function, and the associated AUC is represented in the shaded blue area, representing $\text{AUC}_{\text{definition}}$.  In panel B, we show the additional shaded areas that are due to ties in orange and red; all shaded areas represent $\text{AUC}_{\text{w/ties}}$.  We will show how to calculate these areas from $P(X_{1} = X_{0})$ in $\text{AUC}_{\text{w/ties}}$ such that:
 
 \begin{align*}
 P(X_{1} = X_{0}) &= P(X_{1} = 1, X_{0} = 1) + P(X_{1} = 0, X_{0} = 0) \\
@@ -218,7 +223,7 @@ P(X_{1} = X_{0}) &= P(X_{1} = 1, X_{0} = 1) + P(X_{1} = 0, X_{0} = 0) \\
 &= \left(\text{sensitivity} \times (1 - \text{specificity})\right) + \left((1- \text{sensitivity}) \times \text{specificity}\right)
 \end{align*}
 
-so that we have
+so that combining this with \eqref{eq:expand} we have:
 
 \begin{align*}
 \text{AUC}_{\text{w/ties}} &= \text{specificity} \times \text{sensitivity} \\
@@ -233,6 +238,7 @@ Thus, we can see that geometrically from Figure \ref{fig:main}:
 \text{AUC}_{\text{w/ties}} &= \includegraphics[width=1.5in,keepaspectratio]{addition_small.png}
 \end{align*}
 
+where the order of the addition is the same respectively.
 
 
 ```{r main, echo = FALSE, fig.width=10, fig.height=5, fig.cap = "ROC curve of the data in the simple concrete example.  Here we present a standard ROC curve, with the false positive rate or $1 - \\text{specificity}$ on the x-axis and true positive rate or sensitivity on the y-axis.  The dotted line represents the identity. The shaded area in panel represents the AUC for the strict definition.  The additional shaded areas on panel B represent the AUC when accounting for ties.  "}
@@ -278,11 +284,11 @@ rect(xleft = 1 - spec, xright = 1, ybottom = 0, ytop = sens, col = "deepskyblue3
 
 ## AUC Calculation in Statistical Software
 
-We will explore the estimated ROC curve and AUC from the implementations in the following `R` packages: \pkg{ROCR} [@ROCR], \pkg{caTools} [@caTools], \pkg{pROC} [@pROC], and \pkg{fbroc} [@fbroc].  We will also show these agree with the Python implementation in `sklearn.metrics` from \pkg{scikit-learn} [@scikitlearn], the Stata functions `roctab` and `rocreg` [@bamber1975area; @delong], and the SAS software functions `proc logistic` with `roc` and `roccontrast` .  We note that the majority of these functions all count half the probability of ties, which report $\text{AUC}_{\text{w/ties}}$.
+To determine how these calculations are done in practice, we will explore the estimated ROC curve and AUC from the implementations in the following `R` [@rcore] packages: \pkg{ROCR} [@ROCR], \pkg{caTools} [@caTools], \pkg{pROC} [@pROC], and \pkg{fbroc} [@fbroc].  We will also show these agree with the Python implementation in `sklearn.metrics` from \pkg{scikit-learn} [@scikitlearn], the Stata functions `roctab` and `rocreg` [@bamber1975area; @delong], and the SAS software functions `proc logistic` with `roc` and `roccontrast` .  We note that the majority of these functions all count half the probability of ties, but differences exist in the calculation of confidence intervals of AUC and note some inconsistent behavior.
 
 # AUC Calculation: Current Implementations
 
-This section will present code and results from commonly-used implementations of AUC estimation from R, Python, Stata, and SAS software.  We will note agreement with the definitions of AUC above and any discrepancies.  This section is not to be exhaustive, but show that these definitions are consistently used in AUC analysis, primarily $\widehat{\text{AUC}}_{\text{w/ties}}$.
+This section will present code and results from commonly-used implementations of AUC estimation from R, Python, Stata, and SAS software.  We will note agreement with the definitions of AUC above and any discrepancies.  This section is not to be exhaustive, but give examples how to calculate AUC in these software and show that these definitions are consistently used in AUC analysis, primarily $\widehat{\text{AUC}}_{\text{w/ties}}$.
 
 ```{r, echo = FALSE, message = FALSE, include=FALSE}
 dl = cranlogs::cran_downloads(
@@ -342,7 +348,7 @@ colAUC(x, y)
 ```
 which reports $\text{AUC}_{\text{w/ties}}$.
 
-In \pkg{ROCR} package [@ROCR], one must create a \code{prediction} object with the \code{prediction} function, which can then calculate a series of metrics. AUC is calculated from a \code{performance} function, giving a \code{performance} object, and giving the `"auc"` measure.  We can then extract the AUC as follows:
+In \pkg{ROCR} package [@ROCR], one must create a \code{prediction} object with the \code{prediction} function, which can calculate a series of measures. AUC is calculated from a \code{performance} function, giving a \code{performance} object, and giving the `"auc"` measure.  We can then extract the AUC as follows:
 
 ```{r}
 library(ROCR)
@@ -351,8 +357,7 @@ auc.est = performance(pred, "auc")
 auc.est@y.values[[1]]
 ```
 
-which reports $\text{AUC}_{\text{w/ties}}$.  We see this agrees with the plot from `ROCR` in Figure \ref{fig:rocs}\ref{ROCR}.
-
+which reports $\text{AUC}_{\text{w/ties}}$.  We see this agrees with the plot from `ROCR` in Figure \ref{ROCR}.
 
 
 The \pkg{pROC} [@pROC] package calculates AUC using the `roc` function:
@@ -363,7 +368,7 @@ pROC.roc = pROC::roc(predictor = x, response = y)
 pROC.roc[["auc"]]
 ```
 
-which reports $\text{AUC}_{\text{w/ties}}$ and agrees with the plot from `pROC` in Figure \ref{fig:rocs}\ref{pROC}.
+which reports $\text{AUC}_{\text{w/ties}}$ and agrees with the plot from `pROC` in Figure \ref{pROC}.
 
 
 ```{r, include = FALSE, echo = FALSE, fig.width=10, fig.height=10}
@@ -394,7 +399,7 @@ false.auc = left.tri + auc.defn + right.tri
 false.auc
 ```
 
-The \pkg{fbroc} package calculates the ROC using the `fbroc::boot.roc` and `fbroc::perf` functions.  The package has 2 strategies for dealing with ties, which we will create 2 different objects:
+The \pkg{fbroc} package calculates the ROC using the `fbroc::boot.roc` and `fbroc::perf` functions.  The package has 2 strategies for dealing with ties, which we will create 2 different objects `fbroc.default`, using the default strategy (strategy 2), and alternative strategy (strategy 1, `fbroc.alternative`):
 
 
 ```{r}
@@ -408,9 +413,9 @@ fbroc.alternative = boot.roc(x, as.logical(y),
 auc.alt = perf(fbroc.alternative, "auc")
 auc.alt[["Observed.Performance"]]
 ```
-which both report $\text{AUC}_{\text{definition}}$, identical results to above and agrees with the plot from `fbroc` in Figure \ref{fig:rocs}\ref{fbroc}.  
+which both report $\text{AUC}_{\text{definition}}$, identical results to above and agrees with the plot from `fbroc` in Figure \ref{fbroc2}, which is for strategy 2.  
 
-Although the output is the same, these strategies for ties are different for the plotting for the ROC curve, which we see in Figure \ref{fig:fbrocs}.  The standard error calculation for both strategies use the second strategy (the "pessimistic" approach), which is described in a blog post (https://www.epeter-stats.de/roc-curves-and-ties/) and can be seen in the shaded areas of the panels.  Thus, we see that using either tie strategy results in the same estimate of AUC ($\text{AUC}_{\text{w/ties}}$), but using tie strategy 1 results in a plot which would reflect an AUC of $\text{AUC}_{\text{definition}}$ (Figure \ref{fig:fbrocs}\ref{fig:fbroc1}), which seem to disagree. This result is particularly concerning because the plot should agree with the interpretation of AUC.
+Although the output is the same, these strategies for ties are different for the plotting for the ROC curve, which we see in Figure \ref{fig:fbrocs}.  The standard error calculation for both strategies use the second strategy (Fawcett's "pessimistic" approach), which is described in a blog post (https://www.epeter-stats.de/roc-curves-and-ties/) and can be seen in the shaded areas of the panels.  Thus, we see that using either tie strategy results in the same estimate of AUC ($\text{AUC}_{\text{w/ties}}$), but using tie strategy 1 results in a plot which would reflect an AUC of $\text{AUC}_{\text{definition}}$ (Figure \ref{fig:fbroc1}), which seem to disagree. This result is particularly concerning because the plot should agree with the interpretation of AUC.
 
 ```{r, include = FALSE}
 graph2 <- plot(fbroc.default, main = "Tie Strategy 2")
@@ -455,7 +460,7 @@ python_figure = "python_roc.png"
 ## Python 
 In Python, we will use the implementation in `sklearn.metrics` from \pkg{scikit-learn} [@scikitlearn].  We will use the `R` package `reticulate` [@reticulate], which will provide an Python interface to `R`.  Here we use the `roc_curve` and `auc` functions from \pkg{scikit-learn} and output the estimated AUC:
 
-```{r python_plot, eval = TRUE, message=FALSE, results='hide', include = FALSE}
+```{r python_plot_show, eval = TRUE}
 # Adapted from https://qiita.com/bmj0114/items/460424c110a8ce22d945
 library(reticulate)
 sk = import("sklearn.metrics")
@@ -465,7 +470,7 @@ py.roc.auc = sk$auc(py.roc.curve$fpr, py.roc.curve$tpr)
 py.roc.auc
 ```
 
-which reports $\text{AUC}_{\text{w/ties}}$.  Although we have not exhaustively shown Python reports $\text{AUC}_{\text{w/ties}}$, `scikit-learn` is one of the most popular for machine learning and analysis.  We can use `matplotlib` [@matplotlib] to plot FPR and TPR from the `py.roc.curve` object, which we see in Figure \ref{fig:rocs}\ref{python}, which uses a linear interpolation by default and agrees with $\text{AUC}_{\text{w/ties}}$.
+which reports $\text{AUC}_{\text{w/ties}}$.  Although we have not exhaustively shown Python reports $\text{AUC}_{\text{w/ties}}$, `scikit-learn` is one of the most popular Python modules for machine learning and analysis.  We can use `matplotlib` [@matplotlib] to plot FPR and TPR from the `py.roc.curve` object, which we see in Figure \ref{python}, which uses a linear interpolation by default and agrees with $\text{AUC}_{\text{w/ties}}$.
 
 ```{r python_plot, eval = run_python, message=FALSE, results='hide', include = FALSE}
 # Adapted from
@@ -510,7 +515,7 @@ knitr::include_graphics(python_figure)
 
 ## SAS Software 
 
-In SAS software (version 9.4 for Unix) [@sas], let us assume we have a data set named `roc` loaded with the variables/columns of `x` and `y` as above.  The following commands will produce the ROC curve in Figure \ref{fig:rocs}\ref{sas}:
+In SAS software (version 9.4 for Unix) [@sas], let us assume we have a data set named `roc` loaded with the variables/columns of `x` and `y` as above.  The following commands will produce the ROC curve in Figure \ref{sas}:
 
 ```{r, engine="sas", eval = FALSE}
   proc logistic data=roc;
@@ -560,8 +565,8 @@ graph export stata_roc.png, as(png) replace
      \subfloat[][Stata ROC Plot ]{\includegraphics[width=0.32\linewidth]{stata_roc_cropped.png}\label{stata}}
      \subfloat[][Python ROC Plot from scikit-learn]{\includegraphics[width=0.32\linewidth]{python_roc_cropped.png}\label{python}} 
      \subfloat[][SAS ROC Plot ]{\includegraphics[width=0.32\linewidth]{sas_cropped.png}\label{sas}} \\
-     \subfloat[][ROCR ROC plot ]{\includegraphics[width=0.32\linewidth]{ROCR.png}\label{rocr}}
-     \subfloat[][pROC ROC plot ]{\includegraphics[width=0.32\linewidth]{pROC.png}\label{proc}}
+     \subfloat[][ROCR ROC plot ]{\includegraphics[width=0.32\linewidth]{ROCR.png}\label{ROCR}}
+     \subfloat[][pROC ROC plot ]{\includegraphics[width=0.32\linewidth]{pROC.png}\label{pROC}}
      \subfloat[][fbroc Strategy 2 (default)
 ]{\includegraphics[width=0.32\linewidth]{fbroc2.png}\label{fbroc2}}
      \caption{Comparison of different ROC curves for different  \code{R} packages,  \code{scikit-learn} from  \code{Python},  \code{SAS}, and  \code{Stata}.  Each line represents the ROC curve, which corresponds to an according area under the curve (AUC).  The blue shading represents the confidence interval for the ROC curve in the  \code{fbroc} package.  Also, each software represents the curve as the false positive rate versus the true positive rate, though the  \code{pROC} package calls it sensitivity and specificity (with flipped axes).  Some put the identity line where others do not.  Overall the difference of note as to whether the ROC curve is represented by a step or a linear function. Using the first tie strategy for ties (non-default) in  \code{fbroc} gives the same confidence interval but an ROC curve using linear interpolation.}
@@ -593,7 +598,7 @@ abline(a = 0, b = 1,  col = "gray",lty = "dashed")
 dev.off()
 ```
 
-Thus, we see in Figure \ref{fig:rocs} that all ROC curves are interpolated with a linear interpolation, which coincides with the calculation based on $\text{AUC}_{\text{w/ties}}$, except for the Stata ROC curve, which interpolates using a step function and coincides with $\text{AUC}_{\text{definition}}$.  The confidence interval estimate of the ROC curve for `fbroc`, which is shaded in blue in Figures \ref{fbroc2}, corresponds to variability based on $\text{AUC}_{\text{definition}}$, though it shows the ROC curve based on $\text{AUC}_{\text{w/ties}}$.  
+Thus, we see in Figure \ref{fig:rocs} that all ROC curves are interpolated with a linear interpolation, which coincides with the calculation based on $\text{AUC}_{\text{w/ties}}$, except for the Stata ROC curve, which interpolates using a step function and coincides with $\text{AUC}_{\text{definition}}$.  The confidence interval estimate of the ROC curve for `fbroc`, which is shaded in blue in Figure \ref{fbroc2}, corresponds to variability based on $\text{AUC}_{\text{definition}}$, though it shows the ROC curve based on $\text{AUC}_{\text{w/ties}}$.  
 
 \begin{figure}
      \centering
@@ -604,7 +609,7 @@ Thus, we see in Figure \ref{fig:rocs} that all ROC curves are interpolated with 
      \label{fig:fbrocs}
 \end{figure}
 
-Figure \ref{fig:fbrocs} shows that using the different tie strategies gives a linear (strategy 2, default, panel \ref{fig:fbroc2}, duplicated) or step function/constant (strategy 1, panel \ref{fig:fbroc1}) interpolation.  In each tie strategy, however, the AUC is estimated to be the same.  Therefore, tie strategy 1 may give an inconsistent combination of AUC estimate and ROC representation.
+Figure \ref{fig:fbrocs} shows that using the different tie strategies gives a linear (strategy 2, default, panel \subref{fig:fbroc2}, duplicated) or step function/constant (strategy 1, panel \subref{fig:fbroc1}) interpolation.  In each tie strategy, however, the AUC is estimated to be the same.  Therefore, tie strategy 1 may give an inconsistent combination of AUC estimate and ROC representation.
 
 ```{r, include=FALSE}
 nboot = 1000
@@ -647,7 +652,7 @@ apply(df, 1, function(x) {
 
 # Conclusion
 
-We have shown how the ROC curve is plotted and AUC is estimated in common statistical software when using a unviariate binary predictor.  There are inconsistencies across software platforms, such as `R` and Stata, and even within some packages, such as `fbroc`.   
+We have shown how the ROC curve is plotted and AUC is estimated in common statistical software when using a unviariate binary predictor.  There are inconsistencies across software platforms, such as `R` and Stata, and even within some packages, such as `fbroc`.   We believe these calculations do not reflect the discreteness of the data.  We agree that using a binary predictor in an ROC analysis may not be appropriate, but we note that researchers and users will perform this.  Therefore, we believe additional options for different 
 
 
 

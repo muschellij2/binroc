@@ -1,4 +1,4 @@
-\begin{thebibliography}{19}
+\begin{thebibliography}{23}
 \newcommand{\enquote}[1]{``#1''}
 \providecommand{\natexlab}[1]{#1}
 \providecommand{\url}[1]{\texttt{#1}}
@@ -8,6 +8,12 @@
   \providecommand{\doi}{doi:\discretionary{}{}{}\begingroup
   \urlstyle{rm}\Url}\fi
 \providecommand{\eprint}[2][]{\url{#2}}
+
+\bibitem[{Allaire \emph{et~al.}(2018)Allaire, Ushey, and Tang}]{reticulate}
+Allaire J, Ushey K, Tang Y (2018).
+\newblock \emph{{reticulate}: Interface to '{Python}'}.
+\newblock R package version 1.10.0.9001,
+  \urlprefix\url{https://github.com/rstudio/reticulate}.
 
 \bibitem[{Bamber(1975)}]{bamber1975area}
 Bamber D (1975).
@@ -76,6 +82,22 @@ Hsu YC, Lieli R (2014).
   indices: A note on testing {AUC} = 0.5.}
 \newblock \emph{Unpublished manuscript}.
 
+\bibitem[{Hunter(2007)}]{matplotlib}
+Hunter JD (2007).
+\newblock \enquote{Matplotlib: A {2D} graphics environment.}
+\newblock \emph{Computing In Science \& Engineering}, \textbf{9}(3), 90--95.
+\newblock \doi{10.1109/MCSE.2007.55}.
+
+\bibitem[{Mwipatayi \emph{et~al.}(2016)Mwipatayi, Sharma, Daneshmand, Thomas,
+  Vijayan, Altaf, Garbowski, Jackson, Benveniste, Denton
+  \emph{et~al.}}]{mwipatayi2016durability}
+Mwipatayi BP, Sharma S, Daneshmand A, Thomas SD, Vijayan V, Altaf N, Garbowski
+  M, Jackson M, Benveniste G, Denton M, \emph{et~al.} (2016).
+\newblock \enquote{Durability of the balloon-expandable covered versus
+  bare-metal stents in the Covered versus Balloon Expandable Stent Trial
+  ({COBEST}) for the treatment of aortoiliac occlusive disease.}
+\newblock \emph{Journal of vascular surgery}, \textbf{64}(1), 83--94.
+
 \bibitem[{Pedregosa \emph{et~al.}(2011)Pedregosa, Varoquaux, Gramfort, Michel,
   Thirion, Grisel, Blondel, Prettenhofer, Weiss, Dubourg, Vanderplas, Passos,
   Cournapeau, Brucher, Perrot, and Duchesnay}]{scikitlearn}
@@ -98,6 +120,12 @@ Peter E (2016).
   Characteristics Curves}.
 \newblock R package version 0.4.0,
   \urlprefix\url{https://CRAN.R-project.org/package=fbroc}.
+
+\bibitem[{{R Core Team}(2018)}]{rcore}
+{R Core Team} (2018).
+\newblock \emph{{R}: A Language and Environment for Statistical Computing}.
+\newblock R Foundation for Statistical Computing, Vienna, Austria.
+\newblock \urlprefix\url{https://www.R-project.org/}.
 
 \bibitem[{Robin \emph{et~al.}(2011)Robin, Turck, Hainard, Tiberti, Lisacek,
   Sanchez, and Müller}]{pROC}
