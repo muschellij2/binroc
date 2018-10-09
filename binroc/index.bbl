@@ -1,4 +1,4 @@
-\begin{thebibliography}{23}
+\begin{thebibliography}{28}
 \newcommand{\enquote}[1]{``#1''}
 \providecommand{\natexlab}[1]{#1}
 \providecommand{\url}[1]{\texttt{#1}}
@@ -88,6 +88,14 @@ Hunter JD (2007).
 \newblock \emph{Computing In Science \& Engineering}, \textbf{9}(3), 90--95.
 \newblock \doi{10.1109/MCSE.2007.55}.
 
+\bibitem[{Kushnir \emph{et~al.}(2018)Kushnir, Darmon, Barad, and
+  Gleicher}]{kushnir2018degree}
+Kushnir VA, Darmon SK, Barad DH, Gleicher N (2018).
+\newblock \enquote{Degree of mosaicism in trophectoderm does not predict
+  pregnancy potential: a corrected analysis of pregnancy outcomes following
+  transfer of mosaic embryos.}
+\newblock \emph{Reproductive Biology and Endocrinology}, \textbf{16}(1), 6.
+
 \bibitem[{Mwipatayi \emph{et~al.}(2016)Mwipatayi, Sharma, Daneshmand, Thomas,
   Vijayan, Altaf, Garbowski, Jackson, Benveniste, Denton
   \emph{et~al.}}]{mwipatayi2016durability}
@@ -146,12 +154,30 @@ SAS S, Version S (2017).
 \newblock \enquote{9.4 [Computer Program].}
 \newblock \emph{Cary, NC: SAS Institute}.
 
+\bibitem[{Shterev \emph{et~al.}(2018)Shterev, Dunson, Chan, and
+  Sempowski}]{shterev2018bayesian}
+Shterev ID, Dunson DB, Chan C, Sempowski GD (2018).
+\newblock \enquote{Bayesian Multi-Plate High-Throughput Screening of
+  Compounds.}
+\newblock \emph{Scientific Reports}, \textbf{8}(1), 9551.
+
 \bibitem[{Sing \emph{et~al.}(2005)Sing, Sander, Beerenwinkel, and
   Lengauer}]{ROCR}
 Sing T, Sander O, Beerenwinkel N, Lengauer T (2005).
 \newblock \enquote{{ROCR}: visualizing classifier performance in {R}.}
 \newblock \emph{Bioinformatics}, \textbf{21}(20), 7881.
 \newblock \urlprefix\url{http://rocr.bioinf.mpi-sb.mpg.de}.
+
+\bibitem[{Snarr \emph{et~al.}(2017)Snarr, Liu, Zuckerberg, Falkensammer,
+  Nadaraj, Burstein, Ho, Gardner, Butto, Ewing
+  \emph{et~al.}}]{snarr2017parasternal}
+Snarr BS, Liu MY, Zuckerberg JC, Falkensammer CB, Nadaraj S, Burstein D, Ho D,
+  Gardner MA, Butto A, Ewing SG, \emph{et~al.} (2017).
+\newblock \enquote{The Parasternal Short-Axis View Improves Diagnostic Accuracy
+  for Inferior Sinus Venosus Type of Atrial Septal Defects by Transthoracic
+  Echocardiography.}
+\newblock \emph{Journal of the American Society of Echocardiography},
+  \textbf{30}(3), 209--215.
 
 \bibitem[{Stata(2013)}]{stata}
 Stata S (2013).
@@ -174,5 +200,18 @@ TV L, GH B, JA C, S S, K K, GY O (2017).
 \newblock
   \eprint{/data/journals/ophth/935943/jamaophthalmology_litvin_2016_oi_160098.pdf},
   \urlprefix\url{+ http://dx.doi.org/10.1001/jamaophthalmol.2016.4772}.
+
+\bibitem[{Veltri \emph{et~al.}(2018)Veltri, Kamath, and Shehu}]{veltri2018deep}
+Veltri D, Kamath U, Shehu A (2018).
+\newblock \enquote{Deep learning improves antimicrobial peptide recognition.}
+\newblock \emph{Bioinformatics}, \textbf{1}, 8.
+
+\bibitem[{Xiong \emph{et~al.}(2018)Xiong, Li, Yang, Wei, Hu, Wang, Zhu, Li,
+  Cao, and Xie}]{xiong2018comparison}
+Xiong X, Li Q, Yang WS, Wei X, Hu X, Wang XC, Zhu D, Li R, Cao D, Xie P (2018).
+\newblock \enquote{Comparison of swirl sign and black hole sign in predicting
+  early hematoma growth in patients with spontaneous intracerebral hemorrhage.}
+\newblock \emph{Medical science monitor: international medical journal of
+  experimental and clinical research}, \textbf{24}, 567.
 
 \end{thebibliography}

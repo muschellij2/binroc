@@ -105,7 +105,7 @@ predictor is not really appropriate, but should be represented by a
 single point on the curve. But alas, ROC and AUC analysis is done on
 binary predictors and used to inform if one variable is more predictive
 than the other
-\citep{jama, jama2, glaveckaite2011value, blumberg2016technology, budwega2016factors, mwipatayi2016durability}.
+\citetext{\citealp{jama}; \citealp{jama2}; \citealp{glaveckaite2011value}; \citealp{blumberg2016technology}; \citealp{budwega2016factors}; \citealp{mwipatayi2016durability}; \citealp[\citet{shterev2018bayesian}]{xiong2018comparison}; \citealp{kushnir2018degree}; \citealp{snarr2017parasternal}; \citealp{veltri2018deep}}.
 For example, these cases show that researchers use ROC curves and AUC to
 evaluate predictors, even when the predictors are categorical or binary.
 Although there is nothing inherently wrong with this comparison, it can
@@ -317,7 +317,7 @@ R> sample.estauc
 
 \begin{CodeOutput}
 auc.definition      auc.wties 
-     0.3637970      0.6034095 
+      0.363364       0.603158 
 \end{CodeOutput}
 \end{CodeChunk}
 
@@ -704,7 +704,11 @@ and Stata, and even within some packages, such as \texttt{fbroc}. We
 believe these calculations do not reflect the discreteness of the data.
 We agree that using a binary predictor in an ROC analysis may not be
 appropriate, but we note that researchers and users will perform this.
-Therefore, we believe additional options for different
+Therefore, we believe additional options for different calculations
+accounting for ties should be possible or warnings for discrete data may
+be presented to the user. Overall, we hope that indicating how ties are
+handled would become more common, especially for discrete data in
+practice.
 
 \bibliography{binroc.bib}
 
