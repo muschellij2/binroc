@@ -7,7 +7,6 @@ knitr::opts_chunk$set(
   message = FALSE, warning = FALSE, 
   comment = "")
 knitr::opts_chunk$set(fig.pos = "H")
-run_python = FALSE
 library(reticulate)
 library(tidyverse)
 py_version = "3.5"
@@ -246,40 +245,40 @@ names(py.roc.curve) = c("fpr", "tpr", "thresholds")
 py.roc.auc = sk$auc(py.roc.curve$fpr, py.roc.curve$tpr)
 py.roc.auc
 
-## ----python_plot, eval = run_python, message=FALSE, results='hide', include = FALSE----
-# Adapted from
-# https://qiita.com/bmj0114/items/460424c110a8ce22d945
-sk = import("sklearn.metrics")
-mpl = import("matplotlib")
-mpl$use('TkAgg')
-plt = import("matplotlib.pyplot")
-py.roc.curve = sk$roc_curve(y_score = x, y_true = y)
-names(py.roc.curve) = c("fpr", "tpr", "thresholds")
-py.roc.auc = sk$auc(py.roc.curve$fpr, py.roc.curve$tpr)
+## ----python_plot, eval = FALSE, message=FALSE, results='hide', include = FALSE----
+## # Adapted from
+## # https://qiita.com/bmj0114/items/460424c110a8ce22d945
+## sk = import("sklearn.metrics")
+## mpl = import("matplotlib")
+## mpl$use('TkAgg')
+## plt = import("matplotlib.pyplot")
+## py.roc.curve = sk$roc_curve(y_score = x, y_true = y)
+## names(py.roc.curve) = c("fpr", "tpr", "thresholds")
+## py.roc.auc = sk$auc(py.roc.curve$fpr, py.roc.curve$tpr)
+## 
+## plt$figure()
+## plt$plot(
+##   py.roc.curve$fpr,
+##   py.roc.curve$tpr,
+##   color = 'darkorange',
+##   lw = 1,
+##   label = sprintf('ROC curve (area = %0.3f)', py.roc.auc))
+## plt$plot(c(0, 1),
+##          c(0, 1),
+##          color = 'navy',
+##          lw = 1,
+##          linestyle = '--')
+## plt$xlim(c(0.0, 1.0))
+## plt$ylim(c(0.0, 1.05))
+## plt$xlabel('False Positive Rate')
+## plt$ylabel('True Positive Rate')
+## plt$title('Receiver operating characteristic')
+## plt$legend(loc = "lower right")
 
-plt$figure()
-plt$plot(
-  py.roc.curve$fpr,
-  py.roc.curve$tpr,
-  color = 'darkorange',
-  lw = 1,
-  label = sprintf('ROC curve (area = %0.3f)', py.roc.auc))
-plt$plot(c(0, 1),
-         c(0, 1),
-         color = 'navy',
-         lw = 1,
-         linestyle = '--')
-plt$xlim(c(0.0, 1.0))
-plt$ylim(c(0.0, 1.05))
-plt$xlabel('False Positive Rate')
-plt$ylabel('True Positive Rate')
-plt$title('Receiver operating characteristic')
-plt$legend(loc = "lower right")
-
-## ---- echo = FALSE, include=FALSE, eval = run_python---------------------
-if (!file.exists(python_figure)) {
-  plt$savefig(python_figure)
-}
+## ---- echo = FALSE, include=FALSE, eval = FALSE--------------------------
+## if (!file.exists(python_figure)) {
+##   plt$savefig(python_figure)
+## }
 
 ## ---- echo = FALSE, out.width="100%", include = FALSE--------------------
 knitr::include_graphics(python_figure)

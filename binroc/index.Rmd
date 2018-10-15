@@ -41,7 +41,6 @@ knitr::opts_chunk$set(
   message = FALSE, warning = FALSE, 
   comment = "")
 knitr::opts_chunk$set(fig.pos = "H")
-run_python = FALSE
 library(reticulate)
 library(tidyverse)
 py_version = "3.5"
@@ -472,7 +471,7 @@ py.roc.auc
 
 which reports $\text{AUC}_{\text{w/ties}}$.  Although we have not exhaustively shown Python reports $\text{AUC}_{\text{w/ties}}$, `scikit-learn` is one of the most popular Python modules for machine learning and analysis.  We can use `matplotlib` [@matplotlib] to plot FPR and TPR from the `py.roc.curve` object, which we see in Figure \ref{python}, which uses a linear interpolation by default and agrees with $\text{AUC}_{\text{w/ties}}$.
 
-```{r python_plot, eval = run_python, message=FALSE, results='hide', include = FALSE}
+```{r python_plot, eval = FALSE, message=FALSE, results='hide', include = FALSE}
 # Adapted from
 # https://qiita.com/bmj0114/items/460424c110a8ce22d945
 sk = import("sklearn.metrics")
@@ -503,7 +502,7 @@ plt$title('Receiver operating characteristic')
 plt$legend(loc = "lower right")
 ```
 
-```{r, echo = FALSE, include=FALSE, eval = run_python}
+```{r, echo = FALSE, include=FALSE, eval = FALSE}
 if (!file.exists(python_figure)) {
   plt$savefig(python_figure)
 }
@@ -653,6 +652,8 @@ apply(df, 1, function(x) {
 # Conclusion
 
 We have shown how the ROC curve is plotted and AUC is estimated in common statistical software when using a unviariate binary predictor.  There are inconsistencies across software platforms, such as `R` and Stata, and even within some packages, such as `fbroc`.   We believe these calculations do not reflect the discreteness of the data.  We agree that using a binary predictor in an ROC analysis may not be appropriate, but we note that researchers and users will perform this.  Therefore, we believe additional options for different calculations accounting for ties should be possible or warnings for discrete data may be presented to the user.  Overall, we hope that indicating how ties are handled would become more common, especially for discrete data in practice.
+
+All code required to generate this paper is located at https://github.com/muschellij2/binroc.  
 
 
 
