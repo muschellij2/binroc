@@ -38,6 +38,7 @@ library(knitr)
 library(kableExtra)
 knitr::opts_chunk$set(
   collapse = TRUE,
+  cache = TRUE,
   message = FALSE, warning = FALSE, 
   comment = "")
 knitr::opts_chunk$set(fig.pos = "H")
@@ -54,7 +55,7 @@ knitr::knit_engines$set(python = reticulate::eng_python)
 
 # Introduction
 
-In many applications, receiver operator characteristic (ROC) curves are used to show how a predictor compares to the true outcome.   One of the large advantages of ROC analysis is that it is threshold-agnostic; performance of a predictor is estimated without a specific threshold and also gives a criteria to choose an optimal threshold based on a certain cost function or objective.  Typically, an ROC analysis shows how sensitivity (true positive rate) changes with varying specificity (true negative rate or $1 - \text{false positive rate}$).  Analyses also typically weigh false positives and false negatives equally.  In ROC analyses, the predictive capabilities of a variable is commonly summarized by the area under the curve (AUC), which can be found by integrating areas under the line segments.  We will discuss how interpolation between these line segments affect the visualization of the ROC curve and corresponding AUC.  Additionally, partial ROC (pROC) analysis keeps a specificity fixed and can summarize a predictor by the partial AUC (pAUC) or the optimal sensitivity at that fixed false positive rate.  
+In many applications, receiver operator characteristic (ROC) curves are used to show how a predictor compares to the true outcome.   One of the large advantages of ROC analysis is that it is threshold-agnostic; performance of a predictor is estimated without a specific threshold and also gives a criteria to choose an optimal threshold based on a certain cost function or objective.  Typically, an ROC analysis shows how sensitivity (true positive rate) changes with varying specificity (true negative rate or $1 - \text{false positive rate}$).  Analyses also typically weigh false positives and false negatives equally.  In ROC analyses, the predictive capabilities of a variable is commonly summarized by the area under the curve (AUC), which can be found by integrating areas under the line segments.  We will discuss how interpolation between these line segments affect the visualization of the ROC curve and corresponding AUC.  Additionally, partial ROC (pROC) analysis keeps a maximum specificity fixed and can summarize a predictor by the partial AUC (pAUC) or the optimal sensitivity up to and including that fixed false positive rate.  
 
 Many predictors, especially medical tests, result in a binary decision; a value is higher than a pre-determined threshold or a substance is present.  Similarly, some predictors are commonly collected as categorical or discrete such as low, normal, or high blood pressure while others are categorical by nature such as having a specific gene or not.  These are useful indicators of presence a disease, which is a primary outcome of interest in medical settings, and are used heavily in analysis.
 
@@ -85,54 +86,34 @@ library(dplyr)
 
 # Mathematical Proof of AUC for Single Binary Predictor
 
-First, we will show how the AUC is defined in terms of probability.  This representation is helpful in discussing the connection between the stated interpretation of the AUC, the formal definition and calculation used in software, and how the treatment of ties is crucial when the data are discrete. Let us assume we have a binary predictor $X$ and a binary outcome $Y$, such that $X$ and $Y$ only take the values $0$ and 1, the number of replicates is not relevant here.   Let $X_{i}$ be the values of $X | Y = i$, where $i \in \{0, 1\}$.  
+First, we will show how the AUC is defined in terms of probability.  This representation is helpful in discussing the connection between the stated interpretation of the AUC, the formal definition and calculation used in software, and how the treatment of ties is crucial when the data are discrete. Let us assume we have a binary predictor $X$ and a binary outcome $Y$, such that $X$ and $Y$ only take the values $0$ and $1$, the number of replicates is not relevant here.   Let $X_{i}$ and $Y_{i}$ be the values of subject $i$.
 
 @fawcett2006introduction goes on to state:
 
 > AUC of a classifier is equivalent to the probability that the classifier will rank a randomly chosen positive instance higher than a randomly chosen negative instance. 
 
-In other words, we could discern the definition $\text{AUC} = P(X_{1} > X_{0})$.  Note, the definition here adds no value when the classifier is tied, this is a strict inequality.  As there are only two outcomes for $X$, we can expand this probability using the law of total probability:
+In other words, we could discern the definition $\text{AUC} = P(X_{i} > X_{j} | Y_{i} = 1, Y_{j} = 0)$ for all $i, j$, assuming $(X_{i}, Y_{i}) \independent (X_{j}, Y_{j})$.  Note, the definition here adds no probability when the classifier is tied, this is a strict inequality.  As there are only two outcomes for $X$, we can expand this probability using the law of total probability:
 
 \begin{align}
-P(X_{1} > X_{0}) &= P(X_{1} > X_{0} | X_{1} = 1) P(X_{1} = 1) \nonumber \\
-&+ P(X_{1} > X_{0} | X_{1} = 0) P(X_{1} = 0) \label{eq:expand1} \\
-&= P(X_{1} > X_{0} | X_{1} = 1) P(X_{1} = 1) \label{eq:expand}
+P(X_{i} > X_{j} | Y_{i} = 1, Y_{j} = 0) &= P(X_{i} =1, X_{j} = 0 | Y_{i} = 1, Y_{j} = 0) \nonumber \\ 
+&= P(X_{i} =1 | X_{j} = 0, Y_{i} = 1, Y_{j} = 0) P(X_{j} =0 | Y_{i} = 1, Y_{j} = 0) \nonumber \\ 
+&= P(X_{i} =1 | Y_{i} = 1) P(X_{j} =0 | Y_{j} = 0) \nonumber 
 \end{align}
 
-as $P(X_{1} > X_{0} | X_{1} = 0) = 0$ because $X_{0}$ and $X_{1}$ are  in $\{0, 1\}$. We see that  $P(X_{1} = 1)$ in equation \eqref{eq:expand} is the sensitivity:
+Thus, we see that $P(X_{i} =1 | Y_{i} = 1)$ is the sensitivity and $P(X_{j} =0 | Y_{j} = 0)$ is the specificity, so this reduces to:
 
-\begin{align*}
-P(X_{1} = 1) &= P(X = 1 | Y = 1)\\
-&= \frac{TP}{TP + FN} \\
-&= \text{sensitivity}
-\end{align*}
+\begin{equation}
+P(X_{i} > X_{j} | Y_{i} = 1, Y_{j} = 0) = \text{specificity} \times \text{sensitivity} \label{eq:expand}
+\end{equation}
 
-and that $P(X_{1} > X_{0} | X_{1} = 1)$ in equation \eqref{eq:expand} is the specificity:
-
-\begin{align*}
-P(X_{1} > X_{0} | X_{1} = 1) &= P(X_{1} > X_{0} | X_{1} = 1, X_{0} =1) P(X_{0} = 1) \\
-&+ P(X_{1} > X_{0} | X_{1} = 1, X_{0} =0) P(X_{0} = 0) \\
-&= P(X_{1} > X_{0} | X_{1} = 1, X_{0} =0) P(X_{0} = 0) \\
-&= P(X_{0} = 0) \\
-&= P(X = 0 | Y = 0)\\
-&= \frac{TN}{TN + FP} \\
-&= \text{specificity}
-\end{align*}
-
-We combine these two to show that equation \eqref{eq:expand} reduces to:
-
-$$
-P(X_{1} > X_{0}) = \text{specificity} \times \text{sensitivity}
-$$
-
-Thus, using the definition as $P(X_{1} > X_{0})$, the AUC of a binary predictor is simply the sensitivity times the specificity.
+Thus, using the definition as $P(X_{i} > X_{j} | Y_{i} = 1, Y_{j} = 0)$, the AUC of a binary predictor is simply the sensitivity times the specificity.
 
 
 Let us change the definition of AUC slightly while accounting for ties, which we call $\text{AUC}_{\text{w/ties}}$, to:
 $$
-\text{AUC}_{\text{w/ties}} = P(X_{1} > X_{0}) + \frac{1}{2} P(X_{1} = X_{0})
+\text{AUC}_{\text{w/ties}} = P(X_{i} > X_{j} | Y_{i} = 1, Y_{j} = 0) + \frac{1}{2} P(X_{i} = X_{j} | Y_{i} = 1, Y_{j} = 0)
 $$
-which corresponds to the common definition of AUC.  This AUC is the one reported by most software, as we will see below. 
+which corresponds to the common definition of AUC [@fawcett2006introduction; @saito2015precision; @pepe2009estimation].  This AUC is the one reported by most software, as we will see below. 
 
 
 
@@ -148,6 +129,9 @@ y = c(rep(0, 84), rep(1, 85))
 tab = table(x, y)
 ```
 
+
+
+
 ```{r create_tab, echo = FALSE}
 knitr::kable(tab, 
              caption = "A simple 2x2 table of a binary predictor (rows) versus a binary outcome (columns)", valign = "ht") %>% 
@@ -155,10 +139,102 @@ knitr::kable(tab,
 ```
 
 ```{r, echo = FALSE}
+n = length(y)
+n_y = sum(y)
 sens = tab[2,2] / sum(tab[,2])
 spec = tab[1,1] / sum(tab[,1])
 auc.defn = sens * spec
 # print(auc.defn)
+```
+
+
+```{r cat_ests, echo = FALSE , results = "asis", out.extra = '', include=FALSE}
+# slope = sens / (1 - spec)
+# # fpr = 0.2507
+# # mid_spec = 1 - fpr
+# # mid_sens = fpr * slope
+# mid_sens = 0.8
+# mid_spec = 1 - mid_sens/slope
+# tn = (n - n_y) * mid_spec
+# tp = n_y * mid_sens
+# fn = tp * (1 - mid_sens) / mid_sens
+# fp = tn * (1 - mid_spec) / mid_spec
+# n - (tn + tp + fn + fp)
+# make_tab = matrix(c(tn, fn, fp, tp), nrow = 2, byrow = TRUE)
+# make_tab = round(make_tab)
+# stopifnot(n == sum(make_tab))
+# make_tab[2,2] / sum(make_tab[,2]) - mid_sens
+# make_tab[1,1] / sum(make_tab[,1]) - mid_spec
+# xx = c(rep(0, make_tab[1,1]), rep(1, make_tab[2,1]),
+#        rep(0, make_tab[1,2]), rep(1, make_tab[2,2]))
+spec_new = 0.25
+sens_new = spec_new * (1-sens)/spec + sens
+tn = (n - n_y) * spec_new
+tp = n_y * sens_new
+fn = tp * (1 - sens_new) / sens_new
+fp = tn * (1 - spec_new) / spec_new
+n - (tn + tp + fn + fp)
+make_tab = matrix(c(tn, fn, fp, tp), nrow = 2, byrow = TRUE)
+
+slope = (1 - sens) / (spec)
+inter = sens
+mid_spec = seq(0.01, floor(spec * 100) / 100, by = 0.001)
+mid_sens =  inter + (slope * mid_spec)
+tn = (n - n_y) * mid_spec
+tp = n_y * mid_sens
+ind = which( ( tn %% 1) <= 0.02 & ( tp %% 1) <= 0.1)
+tn[ind]
+tp[ind]
+tn = tn[ind]
+tp = tp[ind]
+mid_sens = mid_sens[ind]
+mid_spec = mid_spec[ind]
+
+fn = tp * (1 - mid_sens) / mid_sens
+fp = tn * (1 - mid_spec) / mid_spec
+n - (tn + tp + fn + fp)
+make_tab = matrix(c(tn, fn, fp, tp), nrow = 2, byrow = TRUE)
+make_tab = round(make_tab)
+stopifnot(n == sum(make_tab))
+make_tab[2,2] / sum(make_tab[,2]) - mid_sens
+make_tab[1,1] / sum(make_tab[,1]) - mid_spec
+xx = c(rep(0, make_tab[1,1]), rep(1, make_tab[2,1]),
+       rep(0, make_tab[1,2]), rep(1, make_tab[2,2]))
+
+```
+
+```{r make_cat_data, echo = FALSE , results = "asis", out.extra = ''}
+make_vec = function(cat_tab) {
+  rownames(cat_tab) = 1:nrow(cat_tab)
+  colnames(cat_tab) = c(0, 1)  
+  xx <- rep(rep(rownames(cat_tab), ncol(cat_tab)), c(cat_tab))
+  xx = as.numeric(xx)
+  yy <- rep(colnames(cat_tab), colSums(cat_tab))
+  yy = as.numeric(yy)
+  ttab = table(xx, yy)
+  stopifnot(all(ttab == cat_tab))
+  return(list(x = xx, y = yy))
+}
+# cat_tab = matrix(c(c(40, 12, 11, 21),
+#                    c(17, 18, 17, 33)), ncol = 2)
+# cat4_x = make_vec(cat_tab)$x
+# cat4_y = make_vec(cat_tab)$y
+
+cat_tab = matrix(c(c(31, 21, 11, 21),
+                   c(21, 14, 17, 33)), ncol = 2)
+run_cat_tab = cat_tab
+cat4_x = make_vec(cat_tab)$x
+cat4_y = make_vec(cat_tab)$y
+
+cat_tab2 = matrix(c(c(40, 12, 32),
+                  c(17, 18, 50)), ncol = 2)
+cat3_x = make_vec(cat_tab2)$x
+cat3_y = make_vec(cat_tab2)$y
+cat_tab3 = matrix(c(c(12, 40, 32),
+                  c(27, 8, 50)), ncol = 2)
+cat_x = make_vec(cat_tab3)$x
+cat_y = make_vec(cat_tab3)$y
+# stop("it")
 ```
 
 
@@ -217,19 +293,20 @@ And thus we see these simulations agree with the values estimated above, with ne
 We will present a geometric discussion of the ROC as well.  In Figure \ref{fig:main}, we show the ROC curve for the simple concrete example.  In panel A, we show the point of sensitivity/specificity connected by the step function, and the associated AUC is represented in the shaded blue area, representing $\text{AUC}_{\text{definition}}$.  In panel B, we show the additional shaded areas that are due to ties in orange and red; all shaded areas represent $\text{AUC}_{\text{w/ties}}$.  We will show how to calculate these areas from $P(X_{1} = X_{0})$ in $\text{AUC}_{\text{w/ties}}$ such that:
 
 \begin{align*}
-P(X_{1} = X_{0}) &= P(X_{1} = 1, X_{0} = 1) + P(X_{1} = 0, X_{0} = 0) \\
-&= P(X_{1} = 1) P(X_{0} = 1) + P(X_{1} = 0) P(X_{0} = 0) \\
-&= \left(\text{sensitivity} \times (1 - \text{specificity})\right) + \left((1- \text{sensitivity}) \times \text{specificity}\right)
+P(X_{i} = X_{j} | Y_{i} = 1, Y_{j} = 0) &= P(X_{i} = 1, X_{j} = 1 | Y_{i} = 1, Y_{j} = 0) + P(X_{i} = 0, X_{j} = 0 | Y_{i} = 1, Y_{j} = 0) \\
+&= P(X_{i} = 1 | Y_{i} = 1) P(X_{j} = 1 | Y_{j} = 0) \;+ \\
+&\hspace{1.3em} P(X_{i} = 0 | Y_{i} = 1) P(X_{j} = 0 | Y_{j} = 0) \\
+&= \left(\text{sensitivity} \times (1 - \text{specificity})\right) \;+ \\
+&\hspace{1.3em} \left((1- \text{sensitivity}) \times \text{specificity}\right)
 \end{align*}
 
 so that combining this with \eqref{eq:expand} we have:
 
 \begin{align*}
-\text{AUC}_{\text{w/ties}} &= \text{specificity} \times \text{sensitivity} \\
-&+ \frac{1}{2} \left(\text{sensitivity} \times (1 - \text{specificity})\right) \\
-&+ \frac{1}{2} \left((1- \text{sensitivity}) \times \text{specificity}\right)
+\text{AUC}_{\text{w/ties}} &= \text{specificity} \times \text{sensitivity} \;+ \\
+&\hspace{1.3em} \frac{1}{2} \left(\text{sensitivity} \times (1 - \text{specificity})\right) \;+ \\
+&\hspace{1.3em} \frac{1}{2} \left((1- \text{sensitivity}) \times \text{specificity}\right) 
 \end{align*}
-
 
 Thus, we can see that geometrically from Figure \ref{fig:main}:
 
@@ -237,8 +314,11 @@ Thus, we can see that geometrically from Figure \ref{fig:main}:
 \text{AUC}_{\text{w/ties}} &= \includegraphics[width=1.5in,keepaspectratio]{addition_small.png}
 \end{align*}
 
-where the order of the addition is the same respectively.
+where the order of the addition is the same respectively.  Note that this equation reduces further such that:
 
+\begin{align*}
+\text{AUC}_{\text{w/ties}} = \frac{1}{2} \left(\text{sensitivity} + \text{specificity}\right).
+\end{align*}
 
 ```{r main, echo = FALSE, fig.width=10, fig.height=5, fig.cap = "ROC curve of the data in the simple concrete example.  Here we present a standard ROC curve, with the false positive rate or $1 - \\text{specificity}$ on the x-axis and true positive rate or sensitivity on the y-axis.  The dotted line represents the identity. The shaded area in panel represents the AUC for the strict definition.  The additional shaded areas on panel B represent the AUC when accounting for ties.  "}
 library(ROCR)
@@ -280,6 +360,17 @@ verts = cbind(x = c(1 - spec, 1, 1), y = c(sens, 1, sens))
 polygon(verts, col = "firebrick", border = FALSE)
 rect(xleft = 1 - spec, xright = 1, ybottom = 0, ytop = sens, col = "deepskyblue3", border = FALSE)
 ```
+
+```{r main3, echo = FALSE, fig.width=5, fig.height=5, include = FALSE}
+library(ROCR)
+pred = prediction(cbind(x, cat4_x), cbind(y, cat4_y))
+perf = performance(pred, "tpr", "fpr")
+plot(perf@x.values[[1]], perf@y.values[[1]], type = 'l',
+     xlab = "False positive rate", ylab = "True positive rate")
+points(perf@x.values[[2]], perf@y.values[[2]], col = "blue", pch = 16)
+# points(perf@x.values[[3]], perf@y.values[[3]], col = "red")
+```
+
 
 ## AUC Calculation in Statistical Software
 
@@ -469,7 +560,7 @@ py.roc.auc = sk$auc(py.roc.curve$fpr, py.roc.curve$tpr)
 py.roc.auc
 ```
 
-which reports $\text{AUC}_{\text{w/ties}}$.  Although we have not exhaustively shown Python reports $\text{AUC}_{\text{w/ties}}$, `scikit-learn` is one of the most popular Python modules for machine learning and analysis.  We can use `matplotlib` [@matplotlib] to plot FPR and TPR from the `py.roc.curve` object, which we see in Figure \ref{python}, which uses a linear interpolation by default and agrees with $\text{AUC}_{\text{w/ties}}$.
+which reports $\text{AUC}_{\text{w/ties}}$.  Although we have not exhaustively shown Python reports $\text{AUC}_{\text{w/ties}}$, `scikit-learn` is one of the most popular Python modules for machine learning and analysis.  We can use `matplotlib` [@matplotlib] to plot FPR and TPR from the `py.roc.curve` object, which we see in Figure \ref{fig:python}, which uses a linear interpolation by default and agrees with $\text{AUC}_{\text{w/ties}}$.
 
 ```{r python_plot, eval = FALSE, message=FALSE, results='hide', include = FALSE}
 # Adapted from
@@ -550,7 +641,7 @@ rocreg y x, nodots auc
 ```
 which agrees with the definition of $\text{AUC}_{\text{definition}}$ and is different from the output from `roctab`.  The variance of the estimate is based on a bootstrap estimate, but the point estimate will remain the same regardless of using the bootstrap or not.  This disagreement of estimates is concerning as the reported estimated AUC may be different depending on the command used in the estimation.  
 
-Using `rocregplot` after running this estimation, we see can create an ROC curve, which is shown in Figure \ref{stata}.  We see that the estimated ROC curve coincides with the estimated AUC from `rocreg` ($\text{AUC}_{\text{definition}}$) and the blue rectangle in Figure \ref{fig:main}.  Thus, `roctab` is one of the most common ways in Stata to estimate AUC, but does not agree with the common way to plot ROC curves.
+Using `rocregplot` after running this estimation, we see can create an ROC curve, which is shown in Figure \ref{fig:stata}.  We see that the estimated ROC curve coincides with the estimated AUC from `rocreg` ($\text{AUC}_{\text{definition}}$) and the blue rectangle in Figure \ref{fig:main}.  Thus, `roctab` is one of the most common ways in Stata to estimate AUC, but does not agree with the common way to plot ROC curves.
 
 ```{r, engine = "stata", echo = FALSE, results = "hide", engine.path = statapath, comment = "", echo = FALSE}
 rocreg y x, auc
@@ -561,8 +652,8 @@ graph export stata_roc.png, as(png) replace
 
 \begin{figure}
      \centering
-     \subfloat[][Stata ROC Plot ]{\includegraphics[width=0.32\linewidth]{stata_roc_cropped.png}\label{stata}}
-     \subfloat[][Python ROC Plot from scikit-learn]{\includegraphics[width=0.32\linewidth]{python_roc_cropped.png}\label{python}} 
+     \subfloat[][Stata ROC Plot ]{\includegraphics[width=0.32\linewidth]{stata_roc_cropped.png}\label{fig:stata}}
+     \subfloat[][Python ROC Plot from scikit-learn]{\includegraphics[width=0.32\linewidth]{python_roc_cropped.png}\label{fig:python}} 
      \subfloat[][SAS ROC Plot ]{\includegraphics[width=0.32\linewidth]{sas_cropped.png}\label{sas}} \\
      \subfloat[][ROCR ROC plot ]{\includegraphics[width=0.32\linewidth]{ROCR.png}\label{ROCR}}
      \subfloat[][pROC ROC plot ]{\includegraphics[width=0.32\linewidth]{pROC.png}\label{pROC}}
@@ -648,6 +739,32 @@ apply(df, 1, function(x) {
 })
 ```
 
+# Categorical Example
+
+Though the main focus of the paper is to demonstrate how using an AUC directly on a binary predictor can lead to overestimation of predictive power, we believe this relates to categorical values as well.  Using ROC analysis with categorical predictors is particularly interesting as single summary measures such as specificity and sensitivity are not available as there are multiple thresholds available.  Let us assume we had a categorical variable, such as one measured using a Likert scale, which takes on 4 categories with the following cross-tabulution with the outcome:
+
+```{r create_cat_tab_output, echo = FALSE}
+knitr::kable(run_cat_tab, 
+             caption = "A example table of a categorical predictor (rows) versus a binary outcome (columns)", valign = "ht", row.names = TRUE) %>% 
+  kableExtra::kable_styling(position = "center")
+```
+
+Note, the number of records is the same as in the binary predictor case.  Here we overlay the ROC curve from this predictor with points on the ROC curve from the binary predictor:
+
+```{r maincat, echo = FALSE, fig.width=5, fig.height=5, fig.cap = "ROC curve of a 4-level categorical variable compared to the binary predictor. Here we present the ROC curve of a categorical predictor (blue points) compared to that of the binary predictor (black line).  We see that the ROC curve is identical if the linear inerpolation is used (accounting for ties).  The red and blue lines show the ROC of the binary and categorical predictor, respectively, using the pessimistic approach.  We believe this demonstrates that although there is more gradation in the categorical variable, using the standard approach provides the same AUC, though we believe these variables have different levels of information as the binary predictor cannot obtain values other than the 2 categories.  "}
+library(ROCR)
+pred = prediction(cbind(x, cat4_x), cbind(y, cat4_y))
+perf = performance(pred, "tpr", "fpr")
+auc = performance(pred, "auc")
+round(yvalues(auc), 5)
+plot(perf@x.values[[1]], perf@y.values[[1]], type = 'l',
+     xlab = "False positive rate", ylab = "True positive rate", lwd = 2)
+points(perf@x.values[[2]], perf@y.values[[2]], col = "blue", pch = 16)
+lines(perf@x.values[[2]], perf@y.values[[2]], col = "deepskyblue3", type = "s", lwd = 2)
+lines(perf@x.values[[1]], perf@y.values[[1]], col = "red", type = "s", lwd = 2)
+```
+
+We see that using the the linear inerpolation in Figure \ref{fig:maincat}, the AUC for the categorical predictor and the binary predictor would be nearly identical.  The AUC is not exact due to the fact that the cells in the table must be integers.  This result is counterintuitive as the categorical variable can take on a number of values with varying sensitivities and specificities, whereas the binary predictor cannot.  With more samples, we could extend this example to a variable which had hundreds of variables with the same ROC shape, not unlike a continuous predictor, that will give an identical AUC.  Using the pessimistic approach (red and blue lines in Figure \ref{fig:maincat}), we see that the AUC would be different in this estimation. 
 
 # Conclusion
 
@@ -730,3 +847,57 @@ seq_range = function(x, ...) {
 unlink("profile.do")
 file.remove("sample_data.dta")
 ```
+
+# Supplemental Material
+
+Here we derive a more detailed derivation of the proofs, which may helpful to teaching this derivation or giving as an exercise.
+
+## Showing a full proof of the strict inequality
+
+\begin{align}
+& P(X_{i} > X_{j} | Y_{i} = 1, Y_{j} = 0) = \;\;\;\; \nonumber \\ 
+\;\;\; & \hspace{1.3em}P(X_{i} > X_{j} | Y_{i} = 1, Y_{j} = 0, X_{i} = {\bf 0}) P(X_{i} = {\bf 0} | Y_{i} = 1, Y_{j} = 0) \nonumber \\
+\;\;\; &\,+ P(X_{i} > X_{j} | Y_{i} = 1, Y_{j} = 0, X_{i} = {\bf 1}) P(X_{i} = {\bf 1} | Y_{i} = 1, Y_{j} = 0) \nonumber \\
+\;\;\; &\,= P(X_{i} > X_{j} | Y_{i} = 1, Y_{j} = 0, X_{i} = 1) P(X_{i} = 1 | Y_{i} = 1, Y_{j} = 0) \label{eq:expand_supp}
+\end{align}
+
+as $P(X_{i} > X_{j} | Y_{i} = 1, Y_{j} = 0, X_{i} = 0) = 0$ because $X_{i}$ and $X_{j}$ are in $\{0, 1\}$. We see that  $P(X_{i} = 1 | Y_{i} = 1, Y_{j} = 0)$ in equation \eqref{eq:expand_supp} is the sensitivity by independence:
+
+\begin{align*}
+P(X_{i} = 1 | Y_{i} = 1, Y_{j} = 0) &= P(X_{i} = 1 | Y_{i} = 1) \\
+&= \frac{TP}{TP + FN} \\
+&= \text{sensitivity}
+\end{align*}
+
+and that $P(X_{i} > X_{j} | Y_{i} = 1, Y_{j} = 0, X_{i} = 1)$ in equation \eqref{eq:expand_supp} is the specificity:
+
+\begin{align*}
+& P(X_{i} > X_{j} | Y_{i} = 1, Y_{j} = 0, X_{i} = 1) =  \\
+& \hspace{1.3em}P(X_{i} > X_{j} | Y_{i} = 1, Y_{j} = 0, X_{i} = 1, X_{j} = {\bf 1}) P(X_{j} = {\bf 1} | Y_{i} = 1, Y_{j} = 0, X_{i} = 1) \\
+&+ P(X_{i} > X_{j} | Y_{i} = 1, Y_{j} = 0, X_{i} = 1, X_{j} = {\bf 0}) P(X_{j} = {\bf 0} | Y_{i} = 1, Y_{j} = 0, X_{i} = 1) \\
+&= P(X_{i} > X_{j} | Y_{i} = 1, Y_{j} = 0, X_{i} = 1, X_{j} = 0) P(X_{j} = 0 | Y_{i} = 1, Y_{j} = 0, X_{i} = 1) \\
+&= P(X_{j} = 0 | Y_{i} = 1, Y_{j} = 0, X_{i} = 1) \\
+&= P(X_{j} = 0 | Y_{j} = 0)\\
+&= \frac{TN}{TN + FP} \\
+&= \text{specificity}
+\end{align*}
+
+as the first probability is zero as $X_{i} = X_{j} = 1$.  We combine these two to show that equation \eqref{eq:expand_supp} reduces to:
+
+$$
+P(X_{i} > X_{j} | Y_{i} = 1, Y_{j} = 0) = \text{specificity} \times \text{sensitivity}
+$$
+
+Thus, using the definition as $P(X_{i} > X_{j} | Y_{i} = 1, Y_{j} = 0)$, the AUC of a binary predictor is simply the sensitivity times the specificity.
+
+
+## Showing a the additional ties
+
+\begin{align*}
+P(X_{i} = X_{j} | Y_{i} = 1, Y_{j} = 0) &= P(X_{i} = X_{j} | Y_{i} = 1, Y_{j} = 0, X_{i} = {\bf 1}, X_{j} = {\bf 1}) \\
+&+ P(X_{i} = X_{j} | Y_{i} = 1, Y_{j} = 0, X_{i} = {\bf 0}, X_{j} = {\bf 0}) \\
+&= P(X_{i} = {\bf 1} | Y_{i} = 1) P(X_{j} = {\bf 1} | Y_{j} = 0) \\
+&+ P(X_{i} = {\bf 0} | Y_{i} = 1) P(X_{j} = {\bf 0} | Y_{j} = 0) \\
+&= \left(\text{sensitivity} \times (1 - \text{specificity})\right) \\
+&+ \left((1- \text{sensitivity}) \times \text{specificity}\right)
+\end{align*}

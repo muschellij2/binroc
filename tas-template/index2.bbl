@@ -1,0 +1,191 @@
+\begin{thebibliography}{xx}
+
+\harvarditem[Allaire et~al.]{Allaire, Ushey \harvardand\
+  Tang}{2018}{reticulate}
+Allaire, J., Ushey, K. \harvardand\ Tang, Y.  \harvardyearleft
+  2018\harvardyearright , {\em {reticulate}: Interface to '{Python}'}.
+\newblock R package version 1.10.0.9001.
+\newline\harvardurl{https://github.com/rstudio/reticulate}
+
+\harvarditem{Bamber}{1975}{bamber1975area}
+Bamber, D.  \harvardyearleft 1975\harvardyearright , `The area above the
+  ordinal dominance graph and the area below the receiver operating
+  characteristic graph', {\em Journal of mathematical psychology} {\bf
+  12}(4),~387--415.
+
+\harvarditem[Blumberg et~al.]{Blumberg, De~Moraes, Liebmann, Garg, Chen,
+  Theventhiran \harvardand\ Hood}{2016}{blumberg2016technology}
+Blumberg, D.~M., De~Moraes, C.~G., Liebmann, J.~M., Garg, R., Chen, C.,
+  Theventhiran, A. \harvardand\ Hood, D.~C.  \harvardyearleft
+  2016\harvardyearright , `Technology and the glaucoma suspect', {\em
+  Investigative ophthalmology \& visual science} {\bf 57}(9),~OCT80--OCT85.
+
+\harvarditem[Budwega et~al.]{Budwega, Sprengerb, De~Vere-Tyndalld, Hagenkordd,
+  Stippichd \harvardand\ Bergera}{2016}{budwega2016factors}
+Budwega, J., Sprengerb, T., De~Vere-Tyndalld, A., Hagenkordd, A., Stippichd, C.
+  \harvardand\ Bergera, C.~T.  \harvardyearleft 2016\harvardyearright ,
+  `Factors associated with significant {MRI} findings in medical walk-in
+  patients with acute headache', {\em Swiss Med Wkly} {\bf 146},~w14349.
+
+\harvarditem[DeLong et~al.]{DeLong, DeLong \harvardand\
+  Clarke-Pearson}{1988}{delong}
+DeLong, E.~R., DeLong, D.~M. \harvardand\ Clarke-Pearson, D.~L.
+  \harvardyearleft 1988\harvardyearright , `Comparing the areas under two or
+  more correlated receiver operating characteristic curves: a nonparametric
+  approach', {\em Biometrics} pp.~837--845.
+
+\harvarditem[E et~al.]{E, C, K \harvardand\ et~al}{2018}{jama}
+E, M., C, M., K, S. \harvardand\ et~al  \harvardyearleft 2018\harvardyearright
+  , `Diagnostic criteria of ulcerative pyoderma gangrenosum: A delphi consensus
+  of international experts', {\em JAMA Dermatology} {\bf 154}(4),~461--466.
+\newline\harvardurl{+ http://dx.doi.org/10.1001/jamadermatol.2017.5980}
+
+\harvarditem{Fawcett}{2006}{fawcett2006introduction}
+Fawcett, T.  \harvardyearleft 2006\harvardyearright , `An introduction to roc
+  analysis', {\em Pattern recognition letters} {\bf 27}(8),~861--874.
+
+\harvarditem[Glaveckaite et~al.]{Glaveckaite, Valeviciene, Palionis,
+  Skorniakov, Celutkiene, Tamosiunas, Uzdavinys \harvardand\
+  Laucevicius}{2011}{glaveckaite2011value}
+Glaveckaite, S., Valeviciene, N., Palionis, D., Skorniakov, V., Celutkiene, J.,
+  Tamosiunas, A., Uzdavinys, G. \harvardand\ Laucevicius, A.  \harvardyearleft
+  2011\harvardyearright , `Value of scar imaging and inotropic reserve
+  combination for the prediction of segmental and global left ventricular
+  functional recovery after revascularisation', {\em Journal of Cardiovascular
+  Magnetic Resonance} {\bf 13}(1),~35.
+
+\harvarditem{Hanley \harvardand\ McNeil}{1982}{hanley1982meaning}
+Hanley, J.~A. \harvardand\ McNeil, B.~J.  \harvardyearleft
+  1982\harvardyearright , `The meaning and use of the area under a receiver
+  operating characteristic ({ROC}) curve.', {\em Radiology} {\bf
+  143}(1),~29--36.
+
+\harvarditem{Hsu \harvardand\ Lieli}{2014}{hsu2014inference}
+Hsu, Y.-C. \harvardand\ Lieli, R.  \harvardyearleft 2014\harvardyearright ,
+  `Inference for {ROC} curves based on estimated predictive indices: A note on
+  testing {AUC} = 0.5', {\em Unpublished manuscript} .
+
+\harvarditem{Hunter}{2007}{matplotlib}
+Hunter, J.~D.  \harvardyearleft 2007\harvardyearright , `Matplotlib: A {2D}
+  graphics environment', {\em Computing In Science \& Engineering} {\bf
+  9}(3),~90--95.
+
+\harvarditem[Kushnir et~al.]{Kushnir, Darmon, Barad \harvardand\
+  Gleicher}{2018}{kushnir2018degree}
+Kushnir, V.~A., Darmon, S.~K., Barad, D.~H. \harvardand\ Gleicher, N.
+  \harvardyearleft 2018\harvardyearright , `Degree of mosaicism in
+  trophectoderm does not predict pregnancy potential: a corrected analysis of
+  pregnancy outcomes following transfer of mosaic embryos', {\em Reproductive
+  Biology and Endocrinology} {\bf 16}(1),~6.
+
+\harvarditem[Mwipatayi et~al.]{Mwipatayi, Sharma, Daneshmand, Thomas, Vijayan,
+  Altaf, Garbowski, Jackson, Benveniste, Denton
+  et~al.}{2016}{mwipatayi2016durability}
+Mwipatayi, B.~P., Sharma, S., Daneshmand, A., Thomas, S.~D., Vijayan, V.,
+  Altaf, N., Garbowski, M., Jackson, M., Benveniste, G., Denton, M. et~al.
+  \harvardyearleft 2016\harvardyearright , `Durability of the
+  balloon-expandable covered versus bare-metal stents in the covered versus
+  balloon expandable stent trial ({COBEST}) for the treatment of aortoiliac
+  occlusive disease', {\em Journal of vascular surgery} {\bf 64}(1),~83--94.
+
+\harvarditem[Pedregosa et~al.]{Pedregosa, Varoquaux, Gramfort, Michel, Thirion,
+  Grisel, Blondel, Prettenhofer, Weiss, Dubourg, Vanderplas, Passos,
+  Cournapeau, Brucher, Perrot \harvardand\ Duchesnay}{2011}{scikitlearn}
+Pedregosa, F., Varoquaux, G., Gramfort, A., Michel, V., Thirion, B., Grisel,
+  O., Blondel, M., Prettenhofer, P., Weiss, R., Dubourg, V., Vanderplas, J.,
+  Passos, A., Cournapeau, D., Brucher, M., Perrot, M. \harvardand\ Duchesnay,
+  E.  \harvardyearleft 2011\harvardyearright , `Scikit-learn: Machine learning
+  in {P}ython', {\em Journal of Machine Learning Research} {\bf
+  12},~2825--2830.
+
+\harvarditem[Pepe et~al.]{Pepe, Longton \harvardand\
+  Janes}{2009}{pepe2009estimation}
+Pepe, M., Longton, G. \harvardand\ Janes, H.  \harvardyearleft
+  2009\harvardyearright , `Estimation and comparison of receiver operating
+  characteristic curves', {\em The Stata Journal} {\bf 9}(1),~1.
+
+\harvarditem{Peter}{2016}{fbroc}
+Peter, E.  \harvardyearleft 2016\harvardyearright , {\em fbroc: Fast Algorithms
+  to Bootstrap Receiver Operating Characteristics Curves}.
+\newblock R package version 0.4.0.
+\newline\harvardurl{https://CRAN.R-project.org/package=fbroc}
+
+\harvarditem{{R Core Team}}{2018}{rcore}
+{R Core Team}  \harvardyearleft 2018\harvardyearright , {\em {R}: A Language
+  and Environment for Statistical Computing}, R Foundation for Statistical
+  Computing, Vienna, Austria.
+\newline\harvardurl{https://www.R-project.org/}
+
+\harvarditem[Robin et~al.]{Robin, Turck, Hainard, Tiberti, Lisacek, Sanchez
+  \harvardand\ Müller}{2011}{pROC}
+Robin, X., Turck, N., Hainard, A., Tiberti, N., Lisacek, F., Sanchez, J.-C.
+  \harvardand\ Müller, M.  \harvardyearleft 2011\harvardyearright , `{pROC}:
+  an open-source package for {R} and {S+} to analyze and compare {ROC} curves',
+  {\em BMC Bioinformatics} {\bf 12},~77.
+
+\harvarditem{Saito \harvardand\ Rehmsmeier}{2015}{saito2015precision}
+Saito, T. \harvardand\ Rehmsmeier, M.  \harvardyearleft 2015\harvardyearright ,
+  `The precision-recall plot is more informative than the {ROC} plot when
+  evaluating binary classifiers on imbalanced datasets', {\em PloS one} {\bf
+  10}(3),~e0118432.
+
+\harvarditem{SAS \harvardand\ Version}{2017}{sas}
+SAS, S. \harvardand\ Version, S.  \harvardyearleft 2017\harvardyearright , `9.4
+  [computer program]', {\em Cary, NC: SAS Institute} .
+
+\harvarditem[Shterev et~al.]{Shterev, Dunson, Chan \harvardand\
+  Sempowski}{2018}{shterev2018bayesian}
+Shterev, I.~D., Dunson, D.~B., Chan, C. \harvardand\ Sempowski, G.~D.
+  \harvardyearleft 2018\harvardyearright , `Bayesian multi-plate
+  high-throughput screening of compounds', {\em Scientific Reports} {\bf
+  8}(1),~9551.
+
+\harvarditem[Sing et~al.]{Sing, Sander, Beerenwinkel \harvardand\
+  Lengauer}{2005}{ROCR}
+Sing, T., Sander, O., Beerenwinkel, N. \harvardand\ Lengauer, T.
+  \harvardyearleft 2005\harvardyearright , `{ROCR}: visualizing classifier
+  performance in {R}', {\em Bioinformatics} {\bf 21}(20),~7881.
+\newline\harvardurl{http://rocr.bioinf.mpi-sb.mpg.de}
+
+\harvarditem[Snarr et~al.]{Snarr, Liu, Zuckerberg, Falkensammer, Nadaraj,
+  Burstein, Ho, Gardner, Butto, Ewing et~al.}{2017}{snarr2017parasternal}
+Snarr, B.~S., Liu, M.~Y., Zuckerberg, J.~C., Falkensammer, C.~B., Nadaraj, S.,
+  Burstein, D., Ho, D., Gardner, M.~A., Butto, A., Ewing, S.~G. et~al.
+  \harvardyearleft 2017\harvardyearright , `The parasternal short-axis view
+  improves diagnostic accuracy for inferior sinus venosus type of atrial septal
+  defects by transthoracic echocardiography', {\em Journal of the American
+  Society of Echocardiography} {\bf 30}(3),~209--215.
+
+\harvarditem{Stata}{2013}{stata}
+Stata, S.  \harvardyearleft 2013\harvardyearright , `Release 13. statistical
+  software', {\em StataCorp LP, College Station, TX} .
+
+\harvarditem{Tuszynski}{2018}{caTools}
+Tuszynski, J.  \harvardyearleft 2018\harvardyearright , {\em {caTools}: Tools:
+  moving window statistics, {GIF}, {Base64}, {ROC} {AUC}, etc.}
+\newblock R package version 1.17.1.1.
+\newline\harvardurl{https://CRAN.R-project.org/package=caTools}
+
+\harvarditem[TV et~al.]{TV, GH, JA, S, K \harvardand\ GY}{2017}{jama2}
+TV, L., GH, B., JA, C., S, S., K, K. \harvardand\ GY, O.  \harvardyearleft
+  2017\harvardyearright , `A revised approach for the detection of
+  sight-threatening diabetic macular edema', {\em JAMA Ophthalmology} {\bf
+  135}(1),~62--68.
+\newline\harvardurl{+ http://dx.doi.org/10.1001/jamaophthalmol.2016.4772}
+
+\harvarditem[Veltri et~al.]{Veltri, Kamath \harvardand\
+  Shehu}{2018}{veltri2018deep}
+Veltri, D., Kamath, U. \harvardand\ Shehu, A.  \harvardyearleft
+  2018\harvardyearright , `Deep learning improves antimicrobial peptide
+  recognition', {\em Bioinformatics} {\bf 1},~8.
+
+\harvarditem[Xiong et~al.]{Xiong, Li, Yang, Wei, Hu, Wang, Zhu, Li, Cao
+  \harvardand\ Xie}{2018}{xiong2018comparison}
+Xiong, X., Li, Q., Yang, W.-S., Wei, X., Hu, X., Wang, X.-C., Zhu, D., Li, R.,
+  Cao, D. \harvardand\ Xie, P.  \harvardyearleft 2018\harvardyearright ,
+  `Comparison of swirl sign and black hole sign in predicting early hematoma
+  growth in patients with spontaneous intracerebral hemorrhage', {\em Medical
+  science monitor: international medical journal of experimental and clinical
+  research} {\bf 24},~567.
+
+\end{thebibliography}

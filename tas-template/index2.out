@@ -1,0 +1,12 @@
+\BOOKMARK [1][-]{section.1}{Introduction}{}% 1
+\BOOKMARK [1][-]{section.2}{Mathematical Proof of AUC for Single Binary Predictor}{}% 2
+\BOOKMARK [2][-]{subsection.2.1}{Simple Concrete Example}{section.2}% 3
+\BOOKMARK [3][-]{subsubsection.2.1.1}{Monte Carlo Estimation of AUC}{subsection.2.1}% 4
+\BOOKMARK [3][-]{subsubsection.2.1.2}{Geometric Argument of AUC}{subsection.2.1}% 5
+\BOOKMARK [2][-]{subsection.2.2}{AUC Calculation in Statistical Software}{section.2}% 6
+\BOOKMARK [1][-]{section.3}{AUC Calculation: Current Implementations}{}% 7
+\BOOKMARK [2][-]{subsection.3.1}{R}{section.3}% 8
+\BOOKMARK [2][-]{subsection.3.2}{Python}{section.3}% 9
+\BOOKMARK [2][-]{subsection.3.3}{SAS Software}{section.3}% 10
+\BOOKMARK [2][-]{subsection.3.4}{Stata}{section.3}% 11
+\BOOKMARK [1][-]{section.4}{Conclusion}{}% 12

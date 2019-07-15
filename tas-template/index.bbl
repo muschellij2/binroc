@@ -1,0 +1,217 @@
+\begin{thebibliography}{28}
+\newcommand{\enquote}[1]{``#1''}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\url}[1]{\texttt{#1}}
+\providecommand{\urlprefix}{URL }
+\expandafter\ifx\csname urlstyle\endcsname\relax
+  \providecommand{\doi}[1]{doi:\discretionary{}{}{}#1}\else
+  \providecommand{\doi}{doi:\discretionary{}{}{}\begingroup
+  \urlstyle{rm}\Url}\fi
+\providecommand{\eprint}[2][]{\url{#2}}
+
+\bibitem[{Allaire \emph{et~al.}(2018)Allaire, Ushey, and Tang}]{reticulate}
+Allaire J, Ushey K, Tang Y (2018).
+\newblock \emph{{reticulate}: Interface to '{Python}'}.
+\newblock R package version 1.10.0.9001,
+  \urlprefix\url{https://github.com/rstudio/reticulate}.
+
+\bibitem[{Bamber(1975)}]{bamber1975area}
+Bamber D (1975).
+\newblock \enquote{The area above the ordinal dominance graph and the area
+  below the receiver operating characteristic graph.}
+\newblock \emph{Journal of mathematical psychology}, \textbf{12}(4), 387--415.
+
+\bibitem[{Blumberg \emph{et~al.}(2016)Blumberg, De~Moraes, Liebmann, Garg,
+  Chen, Theventhiran, and Hood}]{blumberg2016technology}
+Blumberg DM, De~Moraes CG, Liebmann JM, Garg R, Chen C, Theventhiran A, Hood DC
+  (2016).
+\newblock \enquote{Technology and the glaucoma suspect.}
+\newblock \emph{Investigative ophthalmology \& visual science}, \textbf{57}(9),
+  OCT80--OCT85.
+
+\bibitem[{Budwega \emph{et~al.}(2016)Budwega, Sprengerb, De~Vere-Tyndalld,
+  Hagenkordd, Stippichd, and Bergera}]{budwega2016factors}
+Budwega J, Sprengerb T, De~Vere-Tyndalld A, Hagenkordd A, Stippichd C, Bergera
+  CT (2016).
+\newblock \enquote{Factors associated with significant {MRI} findings in
+  medical walk-in patients with acute headache.}
+\newblock \emph{Swiss Med Wkly}, \textbf{146}, w14349.
+
+\bibitem[{DeLong \emph{et~al.}(1988)DeLong, DeLong, and
+  Clarke-Pearson}]{delong}
+DeLong ER, DeLong DM, Clarke-Pearson DL (1988).
+\newblock \enquote{Comparing the areas under two or more correlated receiver
+  operating characteristic curves: a nonparametric approach.}
+\newblock \emph{Biometrics}, pp. 837--845.
+
+\bibitem[{E \emph{et~al.}(2018)E, C, K, and et~al}]{jama}
+E M, C M, K S, et~al (2018).
+\newblock \enquote{Diagnostic criteria of ulcerative pyoderma gangrenosum: A
+  delphi consensus of international experts.}
+\newblock \emph{JAMA Dermatology}, \textbf{154}(4), 461--466.
+\newblock \doi{10.1001/jamadermatol.2017.5980}.
+\newblock
+  \eprint{/data/journals/derm/936924/jamadermatology_maverakis_2018_cs_170003.pdf},
+  \urlprefix\url{+ http://dx.doi.org/10.1001/jamadermatol.2017.5980}.
+
+\bibitem[{Fawcett(2006)}]{fawcett2006introduction}
+Fawcett T (2006).
+\newblock \enquote{An introduction to ROC analysis.}
+\newblock \emph{Pattern recognition letters}, \textbf{27}(8), 861--874.
+
+\bibitem[{Glaveckaite \emph{et~al.}(2011)Glaveckaite, Valeviciene, Palionis,
+  Skorniakov, Celutkiene, Tamosiunas, Uzdavinys, and
+  Laucevicius}]{glaveckaite2011value}
+Glaveckaite S, Valeviciene N, Palionis D, Skorniakov V, Celutkiene J,
+  Tamosiunas A, Uzdavinys G, Laucevicius A (2011).
+\newblock \enquote{Value of scar imaging and inotropic reserve combination for
+  the prediction of segmental and global left ventricular functional recovery
+  after revascularisation.}
+\newblock \emph{Journal of Cardiovascular Magnetic Resonance}, \textbf{13}(1),
+  35.
+
+\bibitem[{Hanley and McNeil(1982)}]{hanley1982meaning}
+Hanley JA, McNeil BJ (1982).
+\newblock \enquote{The meaning and use of the area under a receiver operating
+  characteristic ({ROC}) curve.}
+\newblock \emph{Radiology}, \textbf{143}(1), 29--36.
+
+\bibitem[{Hsu and Lieli(2014)}]{hsu2014inference}
+Hsu YC, Lieli R (2014).
+\newblock \enquote{Inference for {ROC} curves based on estimated predictive
+  indices: A note on testing {AUC} = 0.5.}
+\newblock \emph{Unpublished manuscript}.
+
+\bibitem[{Hunter(2007)}]{matplotlib}
+Hunter JD (2007).
+\newblock \enquote{Matplotlib: A {2D} graphics environment.}
+\newblock \emph{Computing In Science \& Engineering}, \textbf{9}(3), 90--95.
+\newblock \doi{10.1109/MCSE.2007.55}.
+
+\bibitem[{Kushnir \emph{et~al.}(2018)Kushnir, Darmon, Barad, and
+  Gleicher}]{kushnir2018degree}
+Kushnir VA, Darmon SK, Barad DH, Gleicher N (2018).
+\newblock \enquote{Degree of mosaicism in trophectoderm does not predict
+  pregnancy potential: a corrected analysis of pregnancy outcomes following
+  transfer of mosaic embryos.}
+\newblock \emph{Reproductive Biology and Endocrinology}, \textbf{16}(1), 6.
+
+\bibitem[{Mwipatayi \emph{et~al.}(2016)Mwipatayi, Sharma, Daneshmand, Thomas,
+  Vijayan, Altaf, Garbowski, Jackson, Benveniste, Denton
+  \emph{et~al.}}]{mwipatayi2016durability}
+Mwipatayi BP, Sharma S, Daneshmand A, Thomas SD, Vijayan V, Altaf N, Garbowski
+  M, Jackson M, Benveniste G, Denton M, \emph{et~al.} (2016).
+\newblock \enquote{Durability of the balloon-expandable covered versus
+  bare-metal stents in the Covered versus Balloon Expandable Stent Trial
+  ({COBEST}) for the treatment of aortoiliac occlusive disease.}
+\newblock \emph{Journal of vascular surgery}, \textbf{64}(1), 83--94.
+
+\bibitem[{Pedregosa \emph{et~al.}(2011)Pedregosa, Varoquaux, Gramfort, Michel,
+  Thirion, Grisel, Blondel, Prettenhofer, Weiss, Dubourg, Vanderplas, Passos,
+  Cournapeau, Brucher, Perrot, and Duchesnay}]{scikitlearn}
+Pedregosa F, Varoquaux G, Gramfort A, Michel V, Thirion B, Grisel O, Blondel M,
+  Prettenhofer P, Weiss R, Dubourg V, Vanderplas J, Passos A, Cournapeau D,
+  Brucher M, Perrot M, Duchesnay E (2011).
+\newblock \enquote{Scikit-learn: Machine Learning in {P}ython.}
+\newblock \emph{Journal of Machine Learning Research}, \textbf{12}, 2825--2830.
+
+\bibitem[{Pepe \emph{et~al.}(2009)Pepe, Longton, and
+  Janes}]{pepe2009estimation}
+Pepe M, Longton G, Janes H (2009).
+\newblock \enquote{Estimation and comparison of receiver operating
+  characteristic curves.}
+\newblock \emph{The Stata Journal}, \textbf{9}(1), 1.
+
+\bibitem[{Peter(2016)}]{fbroc}
+Peter E (2016).
+\newblock \emph{fbroc: Fast Algorithms to Bootstrap Receiver Operating
+  Characteristics Curves}.
+\newblock R package version 0.4.0,
+  \urlprefix\url{https://CRAN.R-project.org/package=fbroc}.
+
+\bibitem[{{R Core Team}(2018)}]{rcore}
+{R Core Team} (2018).
+\newblock \emph{{R}: A Language and Environment for Statistical Computing}.
+\newblock R Foundation for Statistical Computing, Vienna, Austria.
+\newblock \urlprefix\url{https://www.R-project.org/}.
+
+\bibitem[{Robin \emph{et~al.}(2011)Robin, Turck, Hainard, Tiberti, Lisacek,
+  Sanchez, and Müller}]{pROC}
+Robin X, Turck N, Hainard A, Tiberti N, Lisacek F, Sanchez JC, Müller M
+  (2011).
+\newblock \enquote{{pROC}: an open-source package for {R} and {S+} to analyze
+  and compare {ROC} curves.}
+\newblock \emph{BMC Bioinformatics}, \textbf{12}, 77.
+
+\bibitem[{Saito and Rehmsmeier(2015)}]{saito2015precision}
+Saito T, Rehmsmeier M (2015).
+\newblock \enquote{The precision-recall plot is more informative than the {ROC}
+  plot when evaluating binary classifiers on imbalanced datasets.}
+\newblock \emph{PloS one}, \textbf{10}(3), e0118432.
+
+\bibitem[{SAS and Version(2017)}]{sas}
+SAS S, Version S (2017).
+\newblock \enquote{9.4 [Computer Program].}
+\newblock \emph{Cary, NC: SAS Institute}.
+
+\bibitem[{Shterev \emph{et~al.}(2018)Shterev, Dunson, Chan, and
+  Sempowski}]{shterev2018bayesian}
+Shterev ID, Dunson DB, Chan C, Sempowski GD (2018).
+\newblock \enquote{Bayesian Multi-Plate High-Throughput Screening of
+  Compounds.}
+\newblock \emph{Scientific Reports}, \textbf{8}(1), 9551.
+
+\bibitem[{Sing \emph{et~al.}(2005)Sing, Sander, Beerenwinkel, and
+  Lengauer}]{ROCR}
+Sing T, Sander O, Beerenwinkel N, Lengauer T (2005).
+\newblock \enquote{{ROCR}: visualizing classifier performance in {R}.}
+\newblock \emph{Bioinformatics}, \textbf{21}(20), 7881.
+\newblock \urlprefix\url{http://rocr.bioinf.mpi-sb.mpg.de}.
+
+\bibitem[{Snarr \emph{et~al.}(2017)Snarr, Liu, Zuckerberg, Falkensammer,
+  Nadaraj, Burstein, Ho, Gardner, Butto, Ewing
+  \emph{et~al.}}]{snarr2017parasternal}
+Snarr BS, Liu MY, Zuckerberg JC, Falkensammer CB, Nadaraj S, Burstein D, Ho D,
+  Gardner MA, Butto A, Ewing SG, \emph{et~al.} (2017).
+\newblock \enquote{The Parasternal Short-Axis View Improves Diagnostic Accuracy
+  for Inferior Sinus Venosus Type of Atrial Septal Defects by Transthoracic
+  Echocardiography.}
+\newblock \emph{Journal of the American Society of Echocardiography},
+  \textbf{30}(3), 209--215.
+
+\bibitem[{Stata(2013)}]{stata}
+Stata S (2013).
+\newblock \enquote{Release 13. Statistical software.}
+\newblock \emph{StataCorp LP, College Station, TX}.
+
+\bibitem[{Tuszynski(2018)}]{caTools}
+Tuszynski J (2018).
+\newblock \emph{{caTools}: Tools: moving window statistics, {GIF}, {Base64},
+  {ROC} {AUC}, etc.}
+\newblock R package version 1.17.1.1,
+  \urlprefix\url{https://CRAN.R-project.org/package=caTools}.
+
+\bibitem[{TV \emph{et~al.}(2017)TV, GH, JA, S, K, and GY}]{jama2}
+TV L, GH B, JA C, S S, K K, GY O (2017).
+\newblock \enquote{A revised approach for the detection of sight-threatening
+  diabetic macular edema.}
+\newblock \emph{JAMA Ophthalmology}, \textbf{135}(1), 62--68.
+\newblock \doi{10.1001/jamaophthalmol.2016.4772}.
+\newblock
+  \eprint{/data/journals/ophth/935943/jamaophthalmology_litvin_2016_oi_160098.pdf},
+  \urlprefix\url{+ http://dx.doi.org/10.1001/jamaophthalmol.2016.4772}.
+
+\bibitem[{Veltri \emph{et~al.}(2018)Veltri, Kamath, and Shehu}]{veltri2018deep}
+Veltri D, Kamath U, Shehu A (2018).
+\newblock \enquote{Deep learning improves antimicrobial peptide recognition.}
+\newblock \emph{Bioinformatics}, \textbf{1}, 8.
+
+\bibitem[{Xiong \emph{et~al.}(2018)Xiong, Li, Yang, Wei, Hu, Wang, Zhu, Li,
+  Cao, and Xie}]{xiong2018comparison}
+Xiong X, Li Q, Yang WS, Wei X, Hu X, Wang XC, Zhu D, Li R, Cao D, Xie P (2018).
+\newblock \enquote{Comparison of swirl sign and black hole sign in predicting
+  early hematoma growth in patients with spontaneous intracerebral hemorrhage.}
+\newblock \emph{Medical science monitor: international medical journal of
+  experimental and clinical research}, \textbf{24}, 567.
+
+\end{thebibliography}

@@ -712,7 +712,7 @@ fawcett = function(df) {
   return(R) 
 }
 fawcett_roc = fawcett(faw)
-df = data_frame(x = x, y = y)
+df = data_frame(x =x, y = y)
 fawcett_roc = fawcett(df)
 seq_range = function(x, ...) {
   rx = range(x)

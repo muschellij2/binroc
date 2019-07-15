@@ -1,0 +1,5 @@
+Novelty:
+The main novelty is to show how estimation of AUC in most statistical software can give misleading or different result based on ties.  It describes how handling ties can vastly change the estimation of AUC and also show simple relationships between AUC and specificity and sensitivity in a binary predictor.  These derivations can be used to show how AUC is calculated and then generalized to a discrete predictor with multiple values as a series of AUC calculations. 
+
+Main contribution:
+The main contribution is to show how different software (R, SAS, Stata, Python) estimate AUC with code.  In addition, the goal is to show hot the ROC is plotted with these software and how the plotting of the ROC should correspond to the estimation of AUC, using step functions or linear interpolation, as these have large effects (aka, our eyes should match the numbers).  These examples aim to increase awareness of blindly using AUC as a classification criteria without respect to the type of data in the model.   Also, it provides derivations to show how interpreting the AUC with a strict inequality can change the derivation and estimation of AUC.  
