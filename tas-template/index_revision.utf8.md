@@ -32,26 +32,7 @@ bibliography: binroc.bib
 ---
 
 
-```{r setup, include = FALSE}
-# devtools::install_github("yihui/knitr@0da648bff63d3c4234ea4a19bd9cd62e45efa42a")
-library(knitr)
-library(kableExtra)
-knitr::opts_chunk$set(
-  collapse = TRUE,
-  cache = TRUE,
-  message = FALSE, warning = FALSE, 
-  comment = "")
-knitr::opts_chunk$set(fig.pos = "H")
-library(reticulate)
-library(tidyverse)
-py_version = "3.5"
-python = file.path("/Library/Frameworks/Python.framework",
-                   "/Versions", py_version, "bin/python3")
-use_python(python)
-# use_virtualenv("r-tensorflow")
-knitr::knit_engines$set(python = reticulate::eng_python)
-# devtools::install_github("rstudio/rticles", ref = "jss")
-```
+
 
 # Introduction
 
@@ -74,11 +55,7 @@ or https://www.epeter-stats.de/roc-curves-and-ties/, which was written by the au
 
 Although many discuss the properties of ROC and AUC analyses, we wish to first show the math and calculations of the AUC with a binary predictor and we then explore commonly-used statistical software for ROC curve creation and AUC calculation in a variety of packages and languages.  Overall, we believe that AUC calculations alone may be misleading for binary or categorical predictors depending on the definition of the AUC. We propose to be explicit when reporting the AUC in terms of the approach to ties.
 
-```{r, message=FALSE, echo = FALSE}
-library(cranlogs)
-library(ggplot2)
-library(dplyr)
-```
+
 
 <!-- * \proglang{Java} -->
 <!-- * \pkg{plyr} -->
@@ -122,168 +99,80 @@ which corresponds to the common definition of AUC [@fawcett2006introduction; @sa
 
 To give some intuition of this scenario, we will assume $X$ and $Y$ have the following joint distribution, where $X$ is along the rows and $Y$ is along the columns, as in Table \ref{tab:create_tab}.
 
-```{r make_data, echo = FALSE , results = "asis", out.extra = ''}
-x = c(rep(0, 52), rep(1, 32),
-      rep(0, 35), rep(1, 50))
-y = c(rep(0, 84), rep(1, 85))
-tab = table(x, y)
+
+
+
+
+
+```{=latex}
+\begin{CodeChunk}
+\begin{table}[ht]
+
+\caption{\label{tab:create_tab}A simple 2x2 table of a binary predictor (rows) versus a binary outcome (columns)}
+\centering
+\begin{tabular}{l|r|r}
+\hline
+  & 0 & 1\\
+\hline
+0 & 52 & 35\\
+\hline
+1 & 32 & 50\\
+\hline
+\end{tabular}
+\end{table}
+
+\end{CodeChunk}
 ```
 
 
 
 
-```{r create_tab, echo = FALSE}
-knitr::kable(tab, 
-             caption = "A simple 2x2 table of a binary predictor (rows) versus a binary outcome (columns)", valign = "ht") %>% 
-  kableExtra::kable_styling(position = "center")
-```
-
-```{r, echo = FALSE}
-n = length(y)
-n_y = sum(y)
-sens = tab[2,2] / sum(tab[,2])
-spec = tab[1,1] / sum(tab[,1])
-auc.defn = sens * spec
-# print(auc.defn)
-```
 
 
-```{r cat_ests, echo = FALSE , results = "asis", out.extra = '', include=FALSE}
-# slope = sens / (1 - spec)
-# # fpr = 0.2507
-# # mid_spec = 1 - fpr
-# # mid_sens = fpr * slope
-# mid_sens = 0.8
-# mid_spec = 1 - mid_sens/slope
-# tn = (n - n_y) * mid_spec
-# tp = n_y * mid_sens
-# fn = tp * (1 - mid_sens) / mid_sens
-# fp = tn * (1 - mid_spec) / mid_spec
-# n - (tn + tp + fn + fp)
-# make_tab = matrix(c(tn, fn, fp, tp), nrow = 2, byrow = TRUE)
-# make_tab = round(make_tab)
-# stopifnot(n == sum(make_tab))
-# make_tab[2,2] / sum(make_tab[,2]) - mid_sens
-# make_tab[1,1] / sum(make_tab[,1]) - mid_spec
-# xx = c(rep(0, make_tab[1,1]), rep(1, make_tab[2,1]),
-#        rep(0, make_tab[1,2]), rep(1, make_tab[2,2]))
-spec_new = 0.25
-sens_new = spec_new * (1-sens)/spec + sens
-tn = (n - n_y) * spec_new
-tp = n_y * sens_new
-fn = tp * (1 - sens_new) / sens_new
-fp = tn * (1 - spec_new) / spec_new
-n - (tn + tp + fn + fp)
-make_tab = matrix(c(tn, fn, fp, tp), nrow = 2, byrow = TRUE)
-
-slope = (1 - sens) / (spec)
-inter = sens
-mid_spec = seq(0.01, floor(spec * 100) / 100, by = 0.001)
-mid_sens =  inter + (slope * mid_spec)
-tn = (n - n_y) * mid_spec
-tp = n_y * mid_sens
-ind = which( ( tn %% 1) <= 0.02 & ( tp %% 1) <= 0.1)
-tn[ind]
-tp[ind]
-tn = tn[ind]
-tp = tp[ind]
-mid_sens = mid_sens[ind]
-mid_spec = mid_spec[ind]
-
-fn = tp * (1 - mid_sens) / mid_sens
-fp = tn * (1 - mid_spec) / mid_spec
-n - (tn + tp + fn + fp)
-make_tab = matrix(c(tn, fn, fp, tp), nrow = 2, byrow = TRUE)
-make_tab = round(make_tab)
-stopifnot(n == sum(make_tab))
-make_tab[2,2] / sum(make_tab[,2]) - mid_sens
-make_tab[1,1] / sum(make_tab[,1]) - mid_spec
-xx = c(rep(0, make_tab[1,1]), rep(1, make_tab[2,1]),
-       rep(0, make_tab[1,2]), rep(1, make_tab[2,2]))
-
-```
-
-```{r make_cat_data, echo = FALSE , results = "asis", out.extra = ''}
-make_vec = function(cat_tab) {
-  rownames(cat_tab) = 1:nrow(cat_tab)
-  colnames(cat_tab) = c(0, 1)  
-  xx <- rep(rep(rownames(cat_tab), ncol(cat_tab)), c(cat_tab))
-  xx = as.numeric(xx)
-  yy <- rep(colnames(cat_tab), colSums(cat_tab))
-  yy = as.numeric(yy)
-  ttab = table(xx, yy)
-  stopifnot(all(ttab == cat_tab))
-  return(list(x = xx, y = yy))
-}
-# cat_tab = matrix(c(c(40, 12, 11, 21),
-#                    c(17, 18, 17, 33)), ncol = 2)
-# cat4_x = make_vec(cat_tab)$x
-# cat4_y = make_vec(cat_tab)$y
-
-cat_tab = matrix(c(c(31, 21, 11, 21),
-                   c(21, 14, 17, 33)), ncol = 2)
-run_cat_tab = cat_tab
-cat4_x = make_vec(cat_tab)$x
-cat4_y = make_vec(cat_tab)$y
-
-cat_tab2 = matrix(c(c(40, 12, 32),
-                  c(17, 18, 50)), ncol = 2)
-cat3_x = make_vec(cat_tab2)$x
-cat3_y = make_vec(cat_tab2)$y
-cat_tab3 = matrix(c(c(12, 40, 32),
-                  c(27, 8, 50)), ncol = 2)
-cat_x = make_vec(cat_tab3)$x
-cat_y = make_vec(cat_tab3)$y
-# stop("it")
-```
 
 
-Therefore, the AUC should be equal to $\frac{`r tab[2,2]`}{`r sum(tab[,2])`} \times \frac{`r tab[1,1]`}{`r sum(tab[,1])`}$, which equals `r round(auc.defn, 3)`.  This estimated AUC will be reported throughout the majority of this paper, so note the value.
+
+Therefore, the AUC should be equal to $\frac{50}{85} \times \frac{52}{84}$, which equals 0.364.  This estimated AUC will be reported throughout the majority of this paper, so note the value.
 
 We will define this as the the strict definition of AUC, where ties are not taken into account and we are using strictly greater than in the probability and will call this value $\text{AUC}_{\text{definition}}$.
 
-```{r, echo = FALSE}
-flip.auc = (1 - sens) * (1 - spec)
-# print(flip.auc)
-```
 
-Note, if we reverse the labels, then the sensitivity and the specificity are estimated by $1$ minus that measure, or $\frac{`r tab[1,2]`}{`r sum(tab[,2])`} \times \frac{`r tab[2,1]`}{`r sum(tab[,1])`}$, which is equal to  `r round(flip.auc, 3)`.  Thus, as this AUC is less than the original labeling, we would choose that with the original labeling.  
 
-```{r, echo = FALSE}
-fpr = 1 - spec
-area_of_tri = 1/2 * sens 
-area_of_tri = area_of_tri * fpr
-area_of_quad = sens * spec 
-area_of_upper_tri = 1/2 * spec 
-area_of_upper_tri = area_of_upper_tri * (1 - sens)
-area_of_quad = sens * spec + area_of_upper_tri
-auc = area_of_tri + area_of_quad
-# print(auc)
-```
+Note, if we reverse the labels, then the sensitivity and the specificity are estimated by $1$ minus that measure, or $\frac{35}{85} \times \frac{32}{84}$, which is equal to  0.157.  Thus, as this AUC is less than the original labeling, we would choose that with the original labeling.  
 
-If we used the calculation for $\text{AUC}_{\text{w/ties}}$ we see that we estimate AUC by $\text{AUC}_{\text{definition}} + \frac{1}{2}\left( \frac{`r tab[2,2]` + `r tab[1,1]`}{`r sum(tab)`}\right)$, which is equal to `r round(auc, 3)`.  We will show that most software report this AUC estimate.
+
+
+If we used the calculation for $\text{AUC}_{\text{w/ties}}$ we see that we estimate AUC by $\text{AUC}_{\text{definition}} + \frac{1}{2}\left( \frac{50 + 52}{169}\right)$, which is equal to 0.604.  We will show that most software report this AUC estimate.
 
 ### Monte Carlo Estimation of AUC
-```{r, echo = FALSE}
-n = 1000000
-```
 
-We can also show that if we use simple Monte Carlo sampling, we can randomly choose $X_{0}$ and $X_{1}$.  From these samples, we can estimate these AUC based on the definitions above.  Here, the function \code{est.auc} samples $`r n`$ random samples from $X_{1}$ and $X_{0}$,
+
+We can also show that if we use simple Monte Carlo sampling, we can randomly choose $X_{0}$ and $X_{1}$.  From these samples, we can estimate these AUC based on the definitions above.  Here, the function \code{est.auc} samples $\ensuremath{10^{6}}$ random samples from $X_{1}$ and $X_{0}$,
 determines which is greater, or if they are tied, and then calculates $\widehat{\text{AUC}}_{\text{definition}}$ and $\widehat{\text{AUC}}_{\text{w/ties}}$:
 
-```{r}
-est.auc = function(x, y, n = 1000000) {
-  x1 = x[y == 1] # x | y = 1
-  x0 = x[y == 0] # x | y = 0
-  c1 = sample(x1, size = n, replace = TRUE)
-  c0 = sample(x0, size = n, replace = TRUE)
-  auc.defn = mean(c1 > c0) # strictly greater
-  auc.wties = auc.defn + 1/2 * mean(c1 == c0) # half for ties
-  return(c(auc.definition = auc.defn,
-           auc.wties = auc.wties))
-}
-sample.estauc = est.auc(x, y)
-sample.estauc
+```{=latex}
+\begin{CodeChunk}
+
+\begin{CodeInput}
+R> est.auc = function(x, y, n = 1000000) {
+R+   x1 = x[y == 1] # x | y = 1
+R+   x0 = x[y == 0] # x | y = 0
+R+   c1 = sample(x1, size = n, replace = TRUE)
+R+   c0 = sample(x0, size = n, replace = TRUE)
+R+   auc.defn = mean(c1 > c0) # strictly greater
+R+   auc.wties = auc.defn + 1/2 * mean(c1 == c0) # half for ties
+R+   return(c(auc.definition = auc.defn,
+R+            auc.wties = auc.wties))
+R+ }
+R> sample.estauc = est.auc(x, y)
+R> sample.estauc
+\end{CodeInput}
+
+\begin{CodeOutput}
+auc.definition      auc.wties 
+      0.364379       0.603572 
+\end{CodeOutput}
+\end{CodeChunk}
 ```
 
 And thus we see these simulations agree with the values estimated above, with negligible Monte Carlo error.
@@ -320,56 +209,22 @@ where the order of the addition is the same respectively.  Note that this equati
 \text{AUC}_{\text{w/ties}} = \frac{1}{2} \left(\text{sensitivity} + \text{specificity}\right).
 \end{align*}
 
-```{r main, echo = FALSE, fig.width=10, fig.height=5, fig.cap = "ROC curve of the data in the simple concrete example.  Here we present a standard ROC curve, with the false positive rate or $1 - \\text{specificity}$ on the x-axis and true positive rate or sensitivity on the y-axis.  The dotted line represents the identity. The shaded area in panel represents the AUC for the strict definition.  The additional shaded areas on panel B represent the AUC when accounting for ties.  "}
-library(ROCR)
-yvalues = function(perf) {
-  unlist(slot(perf, "y.values"))
+```{=latex}
+\begin{CodeChunk}
+\begin{figure}[H]
+
+{\centering \includegraphics{index_revision_files/figure-latex/main-1} 
+
 }
-xvalues = function(perf) {
-  unlist(slot(perf, "x.values"))
-}
-pred = prediction(x, y)
-perf = performance(pred, "tpr", "fpr")
-par(mfrow = c(1, 2), oma = c(0, 0, 0, 0), mar = c(5, 4.1, 0, 0))
-plot(xvalues(perf), yvalues(perf), type = "s", 
-     ylab = "True positive rate", 
-     xlab = "False positive rate", cex = 2)
-rect(xleft = 1 - spec, xright = 1, ybottom = 0, ytop = sens, col = "deepskyblue3", border = FALSE)
-lines(xvalues(perf), yvalues(perf), lwd = 2, type = "s")
-abline(a = 0, b = 1, col = "gray", lty = "dashed")
-text(x = 0.15, y = 0.8, labels = c("A"), cex = 12)
-plot(perf, ylab = "")
-verts = cbind(x = c(0, 1 - spec, 1 - spec), y = c(0, sens, 0))
-polygon(verts, col = "orange", border = FALSE)
-verts = cbind(x = c(1 - spec, 1, 1), y = c(sens, 1, sens))
-polygon(verts, col = "firebrick", border = FALSE)
-rect(xleft = 1 - spec, xright = 1, ybottom = 0, ytop = sens, col = "deepskyblue3", border = FALSE)
-lines(xvalues(perf), yvalues(perf), lwd = 2)
-text(x = 0.15, y = 0.8, labels = c("B"), cex = 12)
-# rect(xleft = 0, ybottom =0, xright= 1-spec, ytop = sens, col = "red")
-# rect(xleft = 1 - spec, ybottom = sens, xright= 1, ytop = 1, col = "blue")
-abline(a = 0, b = 1,  col = "gray",lty = "dashed")
+
+\caption[ROC curve of the data in the simple concrete example]{ROC curve of the data in the simple concrete example.  Here we present a standard ROC curve, with the false positive rate or $1 - \text{specificity}$ on the x-axis and true positive rate or sensitivity on the y-axis.  The dotted line represents the identity. The shaded area in panel represents the AUC for the strict definition.  The additional shaded areas on panel B represent the AUC when accounting for ties.  }\label{fig:main}
+\end{figure}
+\end{CodeChunk}
 ```
 
-```{r main2, echo = FALSE, fig.width=5, fig.height=5, include = FALSE}
-library(ROCR)
-plot.new()
-verts = cbind(x = c(0, 1 - spec, 1 - spec), y = c(0, sens, 0))
-polygon(verts, col = "orange", border = FALSE)
-verts = cbind(x = c(1 - spec, 1, 1), y = c(sens, 1, sens))
-polygon(verts, col = "firebrick", border = FALSE)
-rect(xleft = 1 - spec, xright = 1, ybottom = 0, ytop = sens, col = "deepskyblue3", border = FALSE)
-```
 
-```{r main3, echo = FALSE, fig.width=5, fig.height=5, include = FALSE}
-library(ROCR)
-pred = prediction(cbind(x, cat4_x), cbind(y, cat4_y))
-perf = performance(pred, "tpr", "fpr")
-plot(perf@x.values[[1]], perf@y.values[[1]], type = 'l',
-     xlab = "False positive rate", ylab = "True positive rate")
-points(perf@x.values[[2]], perf@y.values[[2]], col = "blue", pch = 16, cex = 2)
-# points(perf@x.values[[3]], perf@y.values[[3]], col = "red")
-```
+
+
 
 
 ## AUC Calculation in Statistical Software
@@ -380,71 +235,45 @@ To determine how these calculations are done in practice, we will explore the es
 
 This section will present code and results from commonly-used implementations of AUC estimation from R, Python, Stata, and SAS software.  We will note agreement with the definitions of AUC above and any discrepancies.  This section is not to be exhaustive, but give examples how to calculate AUC in these software and show that these definitions are consistently used in AUC analysis, primarily $\widehat{\text{AUC}}_{\text{w/ties}}$.
 
-```{r, echo = FALSE, message = FALSE, include=FALSE}
-dl = cranlogs::cran_downloads(
-  # when = "last-month", 
-  from = "2017-09-08",
-  to =  Sys.Date(),
-  packages = c("pROC", "ROCR", "fbroc", "AUC",
-               "PKNCA", "auRoc", "caTools", "npROCRegression", 
-               "roccv", "ROC632", "correctedAUC", "cvAUC",
-               "optAUC", "tpAUC"))
-dl = dl %>% 
-  arrange(package, date) %>% 
-  group_by(package) %>%
-  mutate(count = cumsum(count),
-         label = last(count),
-         last_date = last(date)) %>% 
-  ungroup
-r = range(dl[["date"]])
-r[2] = r[2] + 3
-dl_text = dl %>% 
-  select(package, label, last_date) %>% 
-  distinct %>% 
-  mutate(date = last_date + 3,
-         count = label) %>% 
-  arrange(desc(count), package)
-dl_text = dl_text %>% head(5)
-dl = dl %>% 
-  filter(package %in% dl_text[["package"]])
-dl_text2 = dl_text %>% 
-  mutate(count = ifelse(package == "AUC", count + 2000, count),
-         count = ifelse(package == "cvAUC", count - 2000, count))
-dl %>% 
-  ggplot(aes(x = date, y = count, group = package)) + 
-  xlim(r) +
-  geom_line() + 
-  geom_text(aes(label = package), data = dl_text2,
-                size = 3)
 
-dl %>% 
-  filter(!package %in% c("caTools")) %>% 
-  ggplot(aes(x = date, y = count, group = package)) + 
-  geom_line() + 
-  geom_text(
-    aes(label = package),
-    data = dl_text %>% 
-      filter(!package %in% c("caTools")))
-```
 
 
 ## R
 
 Here we will show the AUC calculation from the common `R` packages for ROC analysis.  We will show that each report the value calculated in $\text{AUC}_{\text{w/ties}}$. The \pkg{caTools} [@caTools] package calculates AUC using the `colAUC` function, taking in predictions as `x` and the binary ground truth labels as `y`:
 
-```{r}
-library(caTools)
-colAUC(x, y)
+```{=latex}
+\begin{CodeChunk}
+
+\begin{CodeInput}
+R> library(caTools)
+R> colAUC(x, y)
+\end{CodeInput}
+
+\begin{CodeOutput}
+             [,1]
+0 vs. 1 0.6036415
+\end{CodeOutput}
+\end{CodeChunk}
 ```
 which reports $\text{AUC}_{\text{w/ties}}$.
 
 In \pkg{ROCR} package [@ROCR], one must create a \code{prediction} object with the \code{prediction} function, which can calculate a series of measures. AUC is calculated from a \code{performance} function, giving a \code{performance} object, and giving the `"auc"` measure.  We can then extract the AUC as follows:
 
-```{r}
-library(ROCR)
-pred = prediction(x, y)
-auc.est = performance(pred, "auc")
-auc.est@y.values[[1]]
+```{=latex}
+\begin{CodeChunk}
+
+\begin{CodeInput}
+R> library(ROCR)
+R> pred = prediction(x, y)
+R> auc.est = performance(pred, "auc")
+R> auc.est@y.values[[1]]
+\end{CodeInput}
+
+\begin{CodeOutput}
+[1] 0.6036415
+\end{CodeOutput}
+\end{CodeChunk}
 ```
 
 which reports $\text{AUC}_{\text{w/ties}}$.  We see this agrees with the plot from `ROCR` in Figure \ref{ROCR}.
@@ -452,28 +281,27 @@ which reports $\text{AUC}_{\text{w/ties}}$.  We see this agrees with the plot fr
 
 The \pkg{pROC} [@pROC] package calculates AUC using the `roc` function:
 
-```{r}
-library(pROC)
-pROC.roc = pROC::roc(predictor = x, response = y)
-pROC.roc[["auc"]]
+```{=latex}
+\begin{CodeChunk}
+
+\begin{CodeInput}
+R> library(pROC)
+R> pROC.roc = pROC::roc(predictor = x, response = y)
+R> pROC.roc[["auc"]]
+\end{CodeInput}
+
+\begin{CodeOutput}
+Area under the curve: 0.6036
+\end{CodeOutput}
+\end{CodeChunk}
 ```
 
 which reports $\text{AUC}_{\text{w/ties}}$ and agrees with the plot from `pROC` in Figure \ref{pROC}.
 
 
-```{r, include = FALSE, echo = FALSE, fig.width=10, fig.height=10}
-ggroc(pROC.roc, colour = "firebrick")
-```
 
-```{r, include = FALSE, echo = FALSE, fig.width=10, fig.height=10}
-par(mfrow = c(2, 2), oma = c(0, 0, 0, 0), mar = c(5, 4.1, 0, 0))
-plot.roc(pROC.roc)
-plot.roc(pROC.roc, type = "s")
-plot(y = pROC.roc[["sensitivities"]],
-     x = 1 - pROC.roc[["specificities"]], type = "l")
-plot(y = pROC.roc[["sensitivities"]],
-     x = 1 - pROC.roc[["specificities"]], type = "s")
-```
+
+
 
 <!-- Looking at the plot for the ROC curve in \pkg{ROCR}, we can see why this may be: -->
 
@@ -481,137 +309,95 @@ plot(y = pROC.roc[["sensitivities"]],
 
 <!-- Looking geometrically at the plot, we can see how  -->
 
-```{r, include = FALSE}
-fpr = 1 - spec
-left.tri = 1/2 * sens * fpr
-right.tri = 1/2 * spec * (1 - sens)
-false.auc = left.tri + auc.defn + right.tri
-false.auc
-```
+
 
 The \pkg{fbroc} package calculates the ROC using the `fbroc::boot.roc` and `fbroc::perf` functions.  The package has 2 strategies for dealing with ties, which we will create 2 different objects `fbroc.default`, using the default strategy (strategy 2), and alternative strategy (strategy 1, `fbroc.alternative`):
 
 
-```{r}
-library(fbroc)
-fbroc.default = boot.roc(x, as.logical(y), 
-                         n.boot = 1000, tie.strategy = 2)
-auc.def = perf(fbroc.default, "auc")
-auc.def[["Observed.Performance"]]
-fbroc.alternative = boot.roc(x, as.logical(y), 
-                             n.boot = 1000, tie.strategy = 1)
-auc.alt = perf(fbroc.alternative, "auc")
-auc.alt[["Observed.Performance"]]
+```{=latex}
+\begin{CodeChunk}
+
+\begin{CodeInput}
+R> library(fbroc)
+R> fbroc.default = boot.roc(x, as.logical(y), 
+R+                          n.boot = 1000, tie.strategy = 2)
+R> auc.def = perf(fbroc.default, "auc")
+R> auc.def[["Observed.Performance"]]
+\end{CodeInput}
+
+\begin{CodeOutput}
+[1] 0.6036415
+\end{CodeOutput}
+
+\begin{CodeInput}
+R> fbroc.alternative = boot.roc(x, as.logical(y), 
+R+                              n.boot = 1000, tie.strategy = 1)
+R> auc.alt = perf(fbroc.alternative, "auc")
+R> auc.alt[["Observed.Performance"]]
+\end{CodeInput}
+
+\begin{CodeOutput}
+[1] 0.6036415
+\end{CodeOutput}
+\end{CodeChunk}
 ```
 which both report $\text{AUC}_{\text{definition}}$, identical results to above and agrees with the plot from `fbroc` in Figure \ref{fbroc2}, which is for strategy 2.  
 
 Although the output is the same, these strategies for ties are different for the plotting for the ROC curve, which we see in Figure \ref{fig:fbrocs}.  The standard error calculation for both strategies use the second strategy (Fawcett's "pessimistic" approach), which is described in a blog post (https://www.epeter-stats.de/roc-curves-and-ties/) and can be seen in the shaded areas of the panels.  Thus, we see that using either tie strategy results in the same estimate of AUC ($\text{AUC}_{\text{w/ties}}$), but using tie strategy 1 results in a plot which would reflect an AUC of $\text{AUC}_{\text{definition}}$ (Figure \ref{fig:fbroc1}), which seem to disagree. This result is particularly concerning because the plot should agree with the interpretation of AUC.
 
-```{r, include = FALSE}
-graph2 <- plot(fbroc.default, main = "Tie Strategy 2")
-graph1 <- plot(fbroc.alternative, add = TRUE, main = "Tie Strategy 1")
-```
-```{r, include = FALSE}
-gridExtra::grid.arrange(graph1, graph2, ncol = 2)
-```
-
-```{r, include = FALSE, eval = TRUE}
-pred = prediction(x, y)
-perf = performance(pred, "tpr", "fpr")
-pnger = function(filename){
-  png(filename, height = 7, width = 7, units = "in", res = 300)
-}
-pnger("ROCR.png")
-plot(perf, main = "ROCR", lwd = 5, cex.axis = 2, cex.lab = 2, cex.main
-= 3, cex =3 )
-dev.off()
-pnger("pROC.png")
-plot(pROC.roc, main = "pROC", lwd = 5, cex.axis = 2, cex.lab = 2, cex.main
-= 3)
-dev.off()
-pnger("fbroc2.png")
-plot(fbroc.default) + ggtitle("fbroc, Strategy 2") +
-  theme(axis.text=element_text(size = 20),
-        axis.title=element_text(size = 20,face="bold"))
-dev.off()
-pnger("fbroc1.png")
-plot(fbroc.alternative) + ggtitle("fbroc, Strategy 1") +
-  theme(axis.text=element_text(size = 20),
-        axis.title=element_text(size = 20,face="bold"))
-dev.off()
-```
 
 
-```{r, echo = FALSE}
-python_figure = "python_roc.png"
-```
+
+
+
+
+
 
 
 ## Python 
 In Python, we will use the implementation in `sklearn.metrics` from \pkg{scikit-learn} [@scikitlearn].  We will use the `R` package `reticulate` [@reticulate], which will provide an Python interface to `R`.  Here we use the `roc_curve` and `auc` functions from \pkg{scikit-learn} and output the estimated AUC:
 
-```{r python_plot_show, eval = TRUE}
-# Adapted from https://qiita.com/bmj0114/items/460424c110a8ce22d945
-library(reticulate)
-sk = import("sklearn.metrics")
-py.roc.curve = sk$roc_curve(y_score = x, y_true = y)
-names(py.roc.curve) = c("fpr", "tpr", "thresholds")
-py.roc.auc = sk$auc(py.roc.curve$fpr, py.roc.curve$tpr)
-py.roc.auc
+```{=latex}
+\begin{CodeChunk}
+
+\begin{CodeInput}
+R> # Adapted from https://qiita.com/bmj0114/items/460424c110a8ce22d945
+R> library(reticulate)
+R> sk = import("sklearn.metrics")
+R> py.roc.curve = sk$roc_curve(y_score = x, y_true = y)
+R> names(py.roc.curve) = c("fpr", "tpr", "thresholds")
+R> py.roc.auc = sk$auc(py.roc.curve$fpr, py.roc.curve$tpr)
+R> py.roc.auc
+\end{CodeInput}
+
+\begin{CodeOutput}
+[1] 0.6036415
+\end{CodeOutput}
+\end{CodeChunk}
 ```
 
 which reports $\text{AUC}_{\text{w/ties}}$.  Although we have not exhaustively shown Python reports $\text{AUC}_{\text{w/ties}}$, `scikit-learn` is one of the most popular Python modules for machine learning and analysis.  We can use `matplotlib` [@matplotlib] to plot FPR and TPR from the `py.roc.curve` object, which we see in Figure \ref{fig:python}, which uses a linear interpolation by default and agrees with $\text{AUC}_{\text{w/ties}}$.
 
-```{r python_plot, eval = FALSE, message=FALSE, results='hide', include = FALSE}
-# Adapted from
-# https://qiita.com/bmj0114/items/460424c110a8ce22d945
-sk = import("sklearn.metrics")
-mpl = import("matplotlib")
-mpl$use('TkAgg')
-plt = import("matplotlib.pyplot")
-py.roc.curve = sk$roc_curve(y_score = x, y_true = y)
-names(py.roc.curve) = c("fpr", "tpr", "thresholds")
-py.roc.auc = sk$auc(py.roc.curve$fpr, py.roc.curve$tpr)
 
-plt$figure()
-plt$plot(
-  py.roc.curve$fpr,
-  py.roc.curve$tpr,
-  color = 'darkorange',
-  lw = 1,
-  label = sprintf('ROC curve (area = %0.3f)', py.roc.auc))
-plt$plot(c(0, 1),
-         c(0, 1),
-         color = 'navy',
-         lw = 1,
-         linestyle = '--')
-plt$xlim(c(0.0, 1.0))
-plt$ylim(c(0.0, 1.05))
-plt$xlabel('False Positive Rate')
-plt$ylabel('True Positive Rate')
-plt$title('Receiver operating characteristic')
-plt$legend(loc = "lower right")
-```
 
-```{r, echo = FALSE, include=FALSE, eval = FALSE}
-if (!file.exists(python_figure)) {
-  plt$savefig(python_figure)
-}
-```
 
-```{r, echo = FALSE, out.width="100%", include = FALSE}
-knitr::include_graphics(python_figure)
-```
+
+
 
 ## SAS Software 
 
 In SAS software (version 9.4 for Unix) [@sas], let us assume we have a data set named `roc` loaded with the variables/columns of `x` and `y` as above.  The following commands will produce the ROC curve in Figure \ref{sas}:
 
-```{r, engine="sas", eval = FALSE}
-  proc logistic data=roc;
-      model y(event='1') = x;
-      roc; roccontrast;
-      run;      
+```{=latex}
+\begin{CodeChunk}
+
+\begin{CodeInput}
+R>   proc logistic data=roc;
+R+       model y(event='1') = x;
+R+       roc; roccontrast;
+R+       run;      
+\end{CodeInput}
+\end{CodeChunk}
 ```
 
 The resulting output reports $\text{AUC}_{\text{w/ties}}$, along with a confidence interval. The calculations can be seen in the SAS User Guide (https://support.sas.com/documentation/cdl/en/statug/63033/HTML/default/viewer.htm#statug_logistic_sect040.htm), which includes the addition of the probability of ties.  
@@ -620,34 +406,32 @@ The resulting output reports $\text{AUC}_{\text{w/ties}}$, along with a confiden
 
 In Stata (StatCorp, College Station, TX, version 13) [@stata], let us assume we have a data set with the variables/columns of `x` and `y` as above.  
 
-```{r global-options, include=FALSE}
-library(haven)
-df = data.frame(x,y)
-haven::write_dta(data = df, path = "sample_data.dta", version = 13)
 
-library(statamd)
-statapath = statamd::stata_engine_path()
-profile_do(dataset = "sample_data.dta")
-```
 
 The function `roctab` is one common way to calculate an AUC:
-```{r, engine = "stata", engine.path = statapath, comment = ""}
-roctab x y
+```{=latex}
+\begin{CodeChunk}
+
+\begin{CodeInput}
+R> roctab x y
+\end{CodeInput}
+\end{CodeChunk}
 ```
 which agrees with the calculation based on $\text{AUC}_{\text{w/ties}}$ and agrees with the estimates from above.  One can also calculate the AUC using the `rocreg` function:
 
-```{r, engine = "stata", engine.path = statapath, comment = ""}
-rocreg y x, nodots auc
+```{=latex}
+\begin{CodeChunk}
+
+\begin{CodeInput}
+R> rocreg y x, nodots auc
+\end{CodeInput}
+\end{CodeChunk}
 ```
 which agrees with the definition of $\text{AUC}_{\text{definition}}$ and is different from the output from `roctab`.  The variance of the estimate is based on a bootstrap estimate, but the point estimate will remain the same regardless of using the bootstrap or not.  This disagreement of estimates is concerning as the reported estimated AUC may be different depending on the command used in the estimation.  
 
 Using `rocregplot` after running this estimation, we see can create an ROC curve, which is shown in Figure \ref{fig:stata}.  We see that the estimated ROC curve coincides with the estimated AUC from `rocreg` ($\text{AUC}_{\text{definition}}$) and the blue rectangle in Figure \ref{fig:main}.  Thus, `roctab` is one of the most common ways in Stata to estimate AUC, but does not agree with the common way to plot ROC curves.
 
-```{r, engine = "stata", echo = FALSE, results = "hide", engine.path = statapath, comment = "", echo = FALSE}
-rocreg y x, auc
-rocregplot
-graph export stata_roc.png, as(png) replace 
-```
+
 
 
 \begin{figure}
@@ -663,30 +447,7 @@ graph export stata_roc.png, as(png) replace
      \label{fig:rocs}
 \end{figure}
 
-```{r, echo = FALSE, fig.width=10, fig.height=5, fig.cap = "hey", results="hide"}
-library(ROCR)
-png("ROCR_plot.png", height = 7, width = 7, units = "in", res = 300)
-pred = prediction(x, y)
-perf = performance(pred, "tpr", "fpr")
-par(mfrow = c(1, 2), oma = c(0, 0, 0, 0), mar = c(5, 4.1, 0, 0))
-plot(xvalues(perf), yvalues(perf), type = "s", 
-     ylab = "True positive rate", 
-     xlab = "False positive rate", cex = 2)
-rect(xleft = 1 - spec, xright = 1, ybottom = 0, ytop = sens, col = "deepskyblue3", border = FALSE)
-lines(xvalues(perf), yvalues(perf), lwd = 2, type = "s")
-abline(a = 0, b = 1, col = "gray", lty = "dashed")
-plot(perf, ylab = "", lwd = 2)
-verts = cbind(x = c(0, 1 - spec, 1 - spec), y = c(0, sens, 0))
-polygon(verts, col = "orange", border = FALSE)
-verts = cbind(x = c(1 - spec, 1, 1), y = c(sens, 1, sens))
-polygon(verts, col = "firebrick", border = FALSE)
-rect(xleft = 1 - spec, xright = 1, ybottom = 0, ytop = sens, col = "deepskyblue3", border = FALSE)
-lines(xvalues(perf), yvalues(perf), lwd = 2)
-# rect(xleft = 0, ybottom =0, xright= 1-spec, ytop = sens, col = "red")
-# rect(xleft = 1 - spec, ybottom = sens, xright= 1, ytop = 1, col = "blue")
-abline(a = 0, b = 1,  col = "gray",lty = "dashed")
-dev.off()
-```
+
 
 Thus, we see in Figure \ref{fig:rocs} that all ROC curves are interpolated with a linear interpolation, which coincides with the calculation based on $\text{AUC}_{\text{w/ties}}$, except for the Stata ROC curve, which interpolates using a step function and coincides with $\text{AUC}_{\text{definition}}$.  The confidence interval estimate of the ROC curve for `fbroc`, which is shaded in blue in Figure \ref{fbroc2}, corresponds to variability based on $\text{AUC}_{\text{definition}}$, though it shows the ROC curve based on $\text{AUC}_{\text{w/ties}}$.  
 
@@ -701,68 +462,51 @@ Thus, we see in Figure \ref{fig:rocs} that all ROC curves are interpolated with 
 
 Figure \ref{fig:fbrocs} shows that using the different tie strategies gives a linear (strategy 2, default, panel \subref{fig:fbroc2}, duplicated) or step function/constant (strategy 1, panel \subref{fig:fbroc1}) interpolation.  In each tie strategy, however, the AUC is estimated to be the same.  Therefore, tie strategy 1 may give an inconsistent combination of AUC estimate and ROC representation.
 
-```{r, include=FALSE}
-nboot = 1000
-n = length(x)
-samps = matrix(sample(n, size = n * nboot, replace = TRUE), 
-               ncol = nboot)
-ssens = sspec = rep(NA, nboot)
-for (iind in seq(nboot)) {
-  ind = samps[, iind]
-  xx = factor(x[ind], levels = c(0, 1))
-  yy = factor(y[ind], levels = c(0, 1))
-  tab = table(xx, yy)
-  sens = tab[2,2] / sum(tab[,2])
-  spec = tab[1,1] / sum(tab[,1])
-  ssens[iind] = sens
-  sspec[iind] = spec
-}
-plot(c(0, 1), c(0, 1), type = "n")
-df = cbind(sspec, ssens)
-apply(df, 1, function(x) {
-  d = rbind(
-    c(0, 0),
-    x,
-    c(1,1))
-  lines(d, type = "s")
-})
-spec_quant = quantile(sspec, probs = c(0.025, 0.975))
-sens_quant = quantile(ssens, probs = c(0.025, 0.975))
-plot(c(0, 1), c(0, 1), type = "n")
-df = cbind(spec_quant, sens_quant)
-apply(df, 1, function(x) {
-  d = rbind(
-    c(0, 0),
-    x,
-    c(1,1))
-  lines(d, type = "s")
-})
-```
+
 
 # Categorical Example
 
 Though the main focus of the paper is to demonstrate how using an AUC directly on a binary predictor can lead to overestimation of predictive power, we believe this relates to categorical values as well.  Using ROC analysis with categorical predictors is particularly interesting as single summary measures such as specificity and sensitivity are not available as there are multiple thresholds available.  Let us assume we had a categorical variable, such as one measured using a Likert scale, which takes on 4 categories with the following cross-tabulution with the outcome:
 
-```{r create_cat_tab_output, echo = FALSE}
-knitr::kable(run_cat_tab, 
-             caption = "A example table of a categorical predictor (rows) versus a binary outcome (columns)", valign = "ht", row.names = TRUE) %>% 
-  kableExtra::kable_styling(position = "center")
+```{=latex}
+\begin{CodeChunk}
+\begin{table}[ht]
+
+\caption{\label{tab:create_cat_tab_output}A example table of a categorical predictor (rows) versus a binary outcome (columns)}
+\centering
+\begin{tabular}{l|r|r}
+\hline
+31 & 21\\
+\hline
+21 & 14\\
+\hline
+11 & 17\\
+\hline
+21 & 33\\
+\hline
+\end{tabular}
+\end{table}
+
+\end{CodeChunk}
 ```
 
 Note, the number of records is the same as in the binary predictor case.  Here we overlay the ROC curve from this predictor with points on the ROC curve from the binary predictor:
 
-```{r maincat, echo = FALSE, fig.width=5, fig.height=5, fig.cap = "ROC curve of a 4-level categorical variable compared to the binary predictor. Here we present the ROC curve of a categorical predictor (blue points) compared to that of the binary predictor (black line).  We see that the ROC curve is identical if the linear inerpolation is used (accounting for ties).  The red and blue lines show the ROC of the binary and categorical predictor, respectively, using the pessimistic approach.  We believe this demonstrates that although there is more gradation in the categorical variable, using the standard approach provides the same AUC, though we believe these variables have different levels of information as the binary predictor cannot obtain values other than the 2 categories.  "}
-library(ROCR)
-pred = prediction(cbind(x, cat4_x), cbind(y, cat4_y))
-perf = performance(pred, "tpr", "fpr")
-auc = performance(pred, "auc")
-round(yvalues(auc), 5)
-plot(perf@x.values[[1]], perf@y.values[[1]], type = 'l',
-     xlab = "False positive rate", ylab = "True positive rate", lwd = 2.5)
-lines(perf@x.values[[2]], perf@y.values[[2]], col = "deepskyblue3", type = "s", lwd = 2)
-lines(perf@x.values[[1]], perf@y.values[[1]], col = "red", type = "s", lwd = 2.5)
-points(perf@x.values[[2]], perf@y.values[[2]], col = "blue", pch = 16, cex = 2.5)
+```{=latex}
+\begin{CodeChunk}
 
+\begin{CodeOutput}
+[1] 0.60364 0.60357
+\end{CodeOutput}
+\begin{figure}[H]
+
+{\centering \includegraphics{index_revision_files/figure-latex/maincat-1} 
+
+}
+
+\caption[ROC curve of a 4-level categorical variable compared to the binary predictor]{ROC curve of a 4-level categorical variable compared to the binary predictor. Here we present the ROC curve of a categorical predictor (blue points) compared to that of the binary predictor (black line).  We see that the ROC curve is identical if the linear inerpolation is used (accounting for ties).  The red and blue lines show the ROC of the binary and categorical predictor, respectively, using the pessimistic approach.  We believe this demonstrates that although there is more gradation in the categorical variable, using the standard approach provides the same AUC, though we believe these variables have different levels of information as the binary predictor cannot obtain values other than the 2 categories.  }\label{fig:maincat}
+\end{figure}
+\end{CodeChunk}
 ```
 
 We see that using the the linear inerpolation in Figure \ref{fig:maincat}, the AUC for the categorical predictor and the binary predictor would be nearly identical.  The AUC is not exact due to the fact that the cells in the table must be integers.  This result is counterintuitive as the categorical variable can take on a number of values with varying sensitivities and specificities, whereas the binary predictor cannot.  With more samples, we could extend this example to a variable which had hundreds of variables with the same ROC shape, not unlike a continuous predictor, that will give an identical AUC.  Using the pessimistic approach (red and blue lines in Figure \ref{fig:maincat}), we see that the AUC would be different in this estimation. 
@@ -775,68 +519,12 @@ All code required to generate this paper is located at https://github.com/musche
 
 
 
-```{r fawcett, include = FALSE}
-faw = data.frame(y = c(rep(TRUE, 6), rep(FALSE, 4)),
-                 x = c(0.99999, 0.99999, 0.99993, 
-                       0.99986, 0.99964, 0.99955, 
-                       0.68139, 0.50961, 0.48880, 0.44951))
-faw = faw %>% mutate(hyp = x > 0.5)
-pred = prediction(predictions = faw[, "x"], labels = faw[, "y"])
-auc.estimated = performance(pred, "auc")
-auc.estimated@y.values[[1]]
-est.auc(x = faw[, "x"], y = faw[, "y"])
-```
 
 
-```{r fawplot, include = FALSE}
-par(mfrow = c(1, 2))
-perf = performance(pred, "tpr", "fpr")
-plot(perf)
-abline(a = 0, b = 1)
-plot(perf, type = "s")
-abline(a = 0, b = 1)
-```
 
-```{r, echo = FALSE}
-library(dplyr)
-fawcett = function(df) {
-  L_sorted = df %>% 
-    arrange(desc(x), y)
-  n_sample = nrow(L_sorted)
-  P = sum(L_sorted[["y"]])
-  N = n_sample - P
-  FP = TP = 0
-  R = NULL
-  f_prev = -Inf
-  i = 1
-  for (i in seq(n_sample)) {
-    f_i = L_sorted[["x"]][i]
-    if (f_i != f_prev) {
-      fpr = FP/N
-      tpr = TP / P
-      R = rbind(R, c(fpr = fpr, tpr = tpr))
-      f_prev = f_i
-    }
-    if (L_sorted[["y"]][i]) {
-      TP = TP + 1
-    }
-    if (!L_sorted[["y"]][i]) {
-      FP = FP + 1
-    }  
-  }
-  fpr = FP/N
-  tpr = TP / P
-  R = rbind(R, c(fpr = fpr, tpr = tpr))
-  return(R) 
-}
-fawcett_roc = fawcett(faw)
-df = data_frame(x = x, y = y)
-fawcett_roc = fawcett(df)
-seq_range = function(x, ...) {
-  rx = range(x)
-  seq(rx[1], rx[2], ...)
-}
-```
+
+
+
 
 
 <!-- https://www.epeter-stats.de/roc-curves-and-ties/ -->
@@ -844,10 +532,7 @@ seq_range = function(x, ...) {
 <!-- http://journals.plos.org/plosone/article?id=10.1371/journal.pone.0118432#pone-0118432-g002 -->
 <!-- https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2774909/ -->
 
-```{r, engine='R', include = FALSE, eval = TRUE}
-unlink("profile.do")
-file.remove("sample_data.dta")
-```
+
 
 # Supplemental Material
 
