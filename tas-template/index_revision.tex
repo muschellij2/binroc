@@ -659,7 +659,7 @@ analysis with categorical predictors is particularly interesting as
 single summary measures such as specificity and sensitivity are not
 available as there are multiple thresholds available. Let us assume we
 had a categorical variable, such as one measured using a Likert scale,
-which takes on 4 categories with the following cross-tabulution with the
+which takes on 4 categories with the following cross-tabulation with the
 outcome:
 
 \begin{CodeChunk}
@@ -669,13 +669,15 @@ outcome:
 \centering
 \begin{tabular}{l|r|r}
 \hline
-31 & 21\\
+  & 0 & 1\\
 \hline
-21 & 14\\
+1 & 31 & 21\\
 \hline
-11 & 17\\
+2 & 21 & 14\\
 \hline
-21 & 33\\
+3 & 11 & 17\\
+\hline
+4 & 21 & 33\\
 \hline
 \end{tabular}
 \end{table}
@@ -687,10 +689,6 @@ Here we overlay the ROC curve from this predictor with points on the ROC
 curve from the binary predictor:
 
 \begin{CodeChunk}
-
-\begin{CodeOutput}
-[1] 0.60364 0.60357
-\end{CodeOutput}
 \begin{figure}[H]
 
 {\centering \includegraphics{index_revision_files/figure-latex/maincat-1} 
@@ -701,7 +699,7 @@ curve from the binary predictor:
 \end{figure}
 \end{CodeChunk}
 
-We see that using the the linear inerpolation in Figure
+We see that using the the linear interpolation in Figure
 \ref{fig:maincat}, the AUC for the categorical predictor and the binary
 predictor would be nearly identical. The AUC is not exact due to the
 fact that the cells in the table must be integers. This result is
@@ -718,7 +716,7 @@ estimation.
 \section{Conclusion}\label{conclusion}}
 
 We have shown how the ROC curve is plotted and AUC is estimated in
-common statistical software when using a unviariate binary predictor.
+common statistical software when using a univariate binary predictor.
 There are inconsistencies across software platforms, such as \texttt{R}
 and Stata, and even within some packages, such as \texttt{fbroc}. We
 believe these calculations do not reflect the discreteness of the data.
@@ -798,6 +796,151 @@ P(X_{i} = X_{j} | Y_{i} = 1, Y_{j} = 0) &= P(X_{i} = X_{j} | Y_{i} = 1, Y_{j} = 
 &= \left(\text{sensitivity} \times (1 - \text{specificity})\right) \\
 &+ \left((1- \text{sensitivity}) \times \text{specificity}\right)
 \end{align*}
+
+\hypertarget{a-more-extreme-example-of-differences-with-categorical-variables}{%
+\subsection{A more extreme example of differences with categorical
+variables}\label{a-more-extreme-example-of-differences-with-categorical-variables}}
+
+We can make a more extreme (yet contrived) example than the categorical
+example we presented before. Let us say we have 20000 samples in the
+data set and we have a binary predictor with the a distribution against
+the outcome as in Table \ref{tab:extreme_bin_tab}.
+
+\begin{CodeChunk}
+\begin{table}[ht]
+
+\caption{\label{tab:extreme_bin_tab}A simple 2x2 table of a binary predictor (rows) versus a binary outcome (columns)}
+\centering
+\begin{tabular}{l|r|r}
+\hline
+  & 0 & 1\\
+\hline
+0 & 5800 & 3800\\
+\hline
+1 & 4200 & 6200\\
+\hline
+\end{tabular}
+\end{table}
+
+\end{CodeChunk}
+
+Let us assume we have a continuous predictor (e.g.~age), but only had 20
+unique values observed, so we can also consider it empirically discrete.
+Here we see the frequency table in Table \ref{tab:extreme_contin_tab}.
+
+\begin{CodeChunk}
+\begin{table}[ht]
+
+\caption{\label{tab:extreme_contin_tab}A simple 2x2 table of a discrete predictor (rows) versus a binary outcome (columns)}
+\centering
+\begin{tabular}{l|r|r}
+\hline
+  & 0 & 1\\
+\hline
+0.0057 & 290 & 190\\
+\hline
+0.0327 & 290 & 190\\
+\hline
+0.0346 & 290 & 190\\
+\hline
+0.0528 & 290 & 190\\
+\hline
+0.1265 & 290 & 190\\
+\hline
+0.1281 & 290 & 190\\
+\hline
+0.3135 & 290 & 190\\
+\hline
+0.3181 & 290 & 190\\
+\hline
+0.3548 & 290 & 190\\
+\hline
+0.4181 & 290 & 190\\
+\hline
+0.4374 & 290 & 190\\
+\hline
+0.4691 & 290 & 190\\
+\hline
+0.4708 & 290 & 190\\
+\hline
+0.471 & 290 & 190\\
+\hline
+0.5264 & 290 & 190\\
+\hline
+0.5541 & 290 & 190\\
+\hline
+0.5542 & 290 & 190\\
+\hline
+0.5862 & 290 & 190\\
+\hline
+0.5975 & 290 & 190\\
+\hline
+0.6101 & 290 & 190\\
+\hline
+0.6144 & 210 & 310\\
+\hline
+0.6234 & 210 & 310\\
+\hline
+0.6369 & 210 & 310\\
+\hline
+0.6799 & 210 & 310\\
+\hline
+0.7001 & 210 & 310\\
+\hline
+0.7129 & 210 & 310\\
+\hline
+0.7218 & 210 & 310\\
+\hline
+0.7979 & 210 & 310\\
+\hline
+0.8079 & 210 & 310\\
+\hline
+0.8284 & 210 & 310\\
+\hline
+0.8926 & 210 & 310\\
+\hline
+0.8971 & 210 & 310\\
+\hline
+0.8978 & 210 & 310\\
+\hline
+0.899 & 210 & 310\\
+\hline
+0.9068 & 210 & 310\\
+\hline
+0.9084 & 210 & 310\\
+\hline
+0.9176 & 210 & 310\\
+\hline
+0.9276 & 210 & 310\\
+\hline
+0.9677 & 210 & 310\\
+\hline
+0.9825 & 210 & 310\\
+\hline
+\end{tabular}
+\end{table}
+
+\end{CodeChunk}
+
+When we create the ROC curves, they have identical curves when
+accounting for ties (black). The red and blue lines represents the ROC
+curves for the pessimistic estimation for the binary (red) and
+continuous though discrete (blue) variables. We see they give vastly
+different results. As the continuous predictor can actually achieve
+sensitivity/specificity combinations on the black line, it may make more
+sense using the linear interpolation, but he pessimistic approach ROC
+curve is similar.
+
+\begin{CodeChunk}
+\begin{figure}[H]
+
+{\centering \includegraphics{index_revision_files/figure-latex/plotter-1} 
+
+}
+
+\caption[ROC curve of the data in the binary versus extreme categorical variable]{ROC curve of the data in the binary versus extreme categorical variable.}\label{fig:plotter}
+\end{figure}
+\end{CodeChunk}
 
 \bibliography{binroc.bib}
 

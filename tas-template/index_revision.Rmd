@@ -741,11 +741,12 @@ apply(df, 1, function(x) {
 
 # Categorical Example
 
-Though the main focus of the paper is to demonstrate how using an AUC directly on a binary predictor can lead to overestimation of predictive power, we believe this relates to categorical values as well.  Using ROC analysis with categorical predictors is particularly interesting as single summary measures such as specificity and sensitivity are not available as there are multiple thresholds available.  Let us assume we had a categorical variable, such as one measured using a Likert scale, which takes on 4 categories with the following cross-tabulution with the outcome:
+Though the main focus of the paper is to demonstrate how using an AUC directly on a binary predictor can lead to overestimation of predictive power, we believe this relates to categorical values as well.  Using ROC analysis with categorical predictors is particularly interesting as single summary measures such as specificity and sensitivity are not available as there are multiple thresholds available.  Let us assume we had a categorical variable, such as one measured using a Likert scale, which takes on 4 categories with the following cross-tabulation with the outcome:
 
 ```{r create_cat_tab_output, echo = FALSE}
+run_cat_tab = table(x = cat4_x, y =cat4_y)
 knitr::kable(run_cat_tab, 
-             caption = "A example table of a categorical predictor (rows) versus a binary outcome (columns)", valign = "ht", row.names = TRUE) %>% 
+             caption = "A example table of a categorical predictor (rows) versus a binary outcome (columns)", valign = "ht", row.names = TRUE, col.names = colnames(run_cat_tab)) %>% 
   kableExtra::kable_styling(position = "center")
 ```
 
@@ -756,7 +757,7 @@ library(ROCR)
 pred = prediction(cbind(x, cat4_x), cbind(y, cat4_y))
 perf = performance(pred, "tpr", "fpr")
 auc = performance(pred, "auc")
-round(yvalues(auc), 5)
+# round(yvalues(auc), 5)
 plot(perf@x.values[[1]], perf@y.values[[1]], type = 'l',
      xlab = "False positive rate", ylab = "True positive rate", lwd = 2.5)
 lines(perf@x.values[[2]], perf@y.values[[2]], col = "deepskyblue3", type = "s", lwd = 2)
@@ -765,11 +766,11 @@ points(perf@x.values[[2]], perf@y.values[[2]], col = "blue", pch = 16, cex = 2.5
 
 ```
 
-We see that using the the linear inerpolation in Figure \ref{fig:maincat}, the AUC for the categorical predictor and the binary predictor would be nearly identical.  The AUC is not exact due to the fact that the cells in the table must be integers.  This result is counterintuitive as the categorical variable can take on a number of values with varying sensitivities and specificities, whereas the binary predictor cannot.  With more samples, we could extend this example to a variable which had hundreds of variables with the same ROC shape, not unlike a continuous predictor, that will give an identical AUC.  Using the pessimistic approach (red and blue lines in Figure \ref{fig:maincat}), we see that the AUC would be different in this estimation. 
+We see that using the the linear interpolation in Figure \ref{fig:maincat}, the AUC for the categorical predictor and the binary predictor would be nearly identical.  The AUC is not exact due to the fact that the cells in the table must be integers.  This result is counterintuitive as the categorical variable can take on a number of values with varying sensitivities and specificities, whereas the binary predictor cannot.  With more samples, we could extend this example to a variable which had hundreds of variables with the same ROC shape, not unlike a continuous predictor, that will give an identical AUC.  Using the pessimistic approach (red and blue lines in Figure \ref{fig:maincat}), we see that the AUC would be different in this estimation. 
 
 # Conclusion
 
-We have shown how the ROC curve is plotted and AUC is estimated in common statistical software when using a unviariate binary predictor.  There are inconsistencies across software platforms, such as `R` and Stata, and even within some packages, such as `fbroc`.   We believe these calculations do not reflect the discreteness of the data.  We agree that using a binary predictor in an ROC analysis may not be appropriate, but we note that researchers and users will perform this.  Therefore, we believe additional options for different calculations accounting for ties should be possible or warnings for discrete data may be presented to the user.  Overall, we hope that indicating how ties are handled would become more common, especially for discrete data in practice.
+We have shown how the ROC curve is plotted and AUC is estimated in common statistical software when using a univariate binary predictor.  There are inconsistencies across software platforms, such as `R` and Stata, and even within some packages, such as `fbroc`.   We believe these calculations do not reflect the discreteness of the data.  We agree that using a binary predictor in an ROC analysis may not be appropriate, but we note that researchers and users will perform this.  Therefore, we believe additional options for different calculations accounting for ties should be possible or warnings for discrete data may be presented to the user.  Overall, we hope that indicating how ties are handled would become more common, especially for discrete data in practice.
 
 All code required to generate this paper is located at https://github.com/muschellij2/binroc.  
 
@@ -902,3 +903,71 @@ P(X_{i} = X_{j} | Y_{i} = 1, Y_{j} = 0) &= P(X_{i} = X_{j} | Y_{i} = 1, Y_{j} = 
 &= \left(\text{sensitivity} \times (1 - \text{specificity})\right) \\
 &+ \left((1- \text{sensitivity}) \times \text{specificity}\right)
 \end{align*}
+
+
+## A more extreme example of differences with categorical variables
+
+We can make a more extreme (yet contrived) example than the categorical example we presented before.  Let us say we have 20000 samples in the data set and we have a binary predictor with the a distribution against the outcome as in Table \ref{tab:extreme_bin_tab}.
+
+```{r, eval = TRUE, echo = FALSE}
+library(ROCR)
+new_tab = cbind(c(5800, 10000-5800),
+                c(3800, 10000-3800))
+rownames(new_tab) = c(0, 1)
+colnames(new_tab) = c(0, 1)
+```
+
+```{r extreme_bin_tab, echo = FALSE}
+knitr::kable(new_tab, 
+             caption = "A simple 2x2 table of a binary predictor (rows) versus a binary outcome (columns)", valign = "ht") %>% 
+  kableExtra::kable_styling(position = "center")
+```
+
+```{r, eval = TRUE, echo = FALSE}
+make_vec = function(cat_tab) {
+  rownames(cat_tab) = 1:nrow(cat_tab)
+  colnames(cat_tab) = c(0, 1)  
+  xx <- rep(rep(rownames(cat_tab), ncol(cat_tab)), c(cat_tab))
+  xx = as.numeric(xx)
+  yy <- rep(colnames(cat_tab), colSums(cat_tab))
+  yy = as.numeric(yy)
+  ttab = table(xx, yy)
+  stopifnot(all(ttab == cat_tab))
+  return(list(x = xx, y = yy))
+}
+
+
+ndiv = 20
+tt = new_tab/ndiv
+long_mat = rbind(
+  matrix(rep(tt[1,], ndiv), nrow = ndiv, byrow = TRUE),
+  matrix(rep(tt[2,], ndiv), nrow = ndiv, byrow = TRUE)
+)
+u = unique(sort(round(runif(ndiv * 2*5), 4)))
+rownames(long_mat) = sort(sample(u, size = ndiv * 2))
+colnames(long_mat) = c(0, 1)
+```
+
+Let us assume we have a continuous predictor (e.g. age), but only had `r ndiv` unique values observed, so we can also consider it empirically discrete.  Here we see the frequency table in Table \ref{tab:extreme_contin_tab}.
+
+```{r extreme_contin_tab, echo = FALSE}
+knitr::kable(long_mat, 
+             caption = "A simple 2x2 table of a discrete predictor (rows) versus a binary outcome (columns)", valign = "ht") %>% 
+  kableExtra::kable_styling(position = "center")
+```
+
+When we create the ROC curves, they have identical curves when accounting for ties (black).  The red and blue lines represents the ROC curves for the pessimistic estimation for the binary (red) and continuous though discrete (blue) variables.  We see they give vastly different results.  As the continuous predictor can actually achieve sensitivity/specificity combinations on the black line, it may make more sense using the linear interpolation, but he pessimistic approach ROC curve is similar. 
+
+```{r plotter, echo = FALSE, fig.width=10, fig.height=5, fig.cap = "ROC curve of the data in the binary versus extreme categorical variable."}
+bin = make_vec(new_tab)
+lbin = make_vec(long_mat)
+
+pred = prediction(cbind(bin$x, lbin$x), cbind(lbin$y, lbin$y))
+perf = performance(pred, "tpr", "fpr")
+
+plot(perf@x.values[[1]], perf@y.values[[1]], type = 'l',
+     xlab = "False positive rate", ylab = "True positive rate", lwd = 2.5)
+lines(perf@x.values[[2]], perf@y.values[[2]], col = "deepskyblue3", type = "s", lwd = 2)
+lines(perf@x.values[[1]], perf@y.values[[1]], col = "red", type = "s", lwd = 2.5)
+points(perf@x.values[[2]], perf@y.values[[2]], col = "blue", pch = 16)
+```
