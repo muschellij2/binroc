@@ -1,0 +1,31 @@
+Reviewer #1: While the draft touches on an interesting topic, I think there are some more minor and major issues that should be addressed before acceptance.
+
+1.      The issue the draft concerns itself it occurs in some form whenever there are ties in the predictor. The paper concerns itself too much with the special case of a binary predictor, in which ROC analysis is not very useful and where despite the pessimism expressed by the author people working with binary predictors can usually be convinced to use metrics like sensitivity, specificity, positive predictive value and/or negative predictive values instead. The binary case may be an interesting edge case but should not be the focus. Discussion of an example on a Likert-scale might be illuminating.
+
+> Thank you for the recommendation.  We have added a section with a categorical, 4-level predictor in section 4 "Categorical Predictor Example".  We show an interesting case where you get the same AUC when linear interpolation is done, but different AUC when using the step function.   We believe this illustrates our example more than the simple binary case and adds significantly to the manuscript.
+
+2.      The definition given for partial ROC is not correct; the specificity is not fixed at a specific value, instead an entire subrange is considered and integrated over.
+
+> Thank you, we agree.  We have changed the text to state:
+"Additionally, partial ROC (pROC) analysis keeps a maximum specificity fixed and can summarize a predictor by the partial AUC (pAUC), integrating up to the maximum specificity, or the maximum  sensitivity with the smallest false positive rate in that subset range. "
+
+
+3.      The ROC-Curve discussion focusses too much on the AUC, and not enough on finding a good threshold. I.e. if the sensitivity needs to be at least 80% then interpolation might not make sense. Consider the example from 2.1: it has a specificity of about 62% and a sensitivity of about 59%. 
+
+With linear interpolation the ROC curve would suggest that you could have a specificity of about 90% with a sensitivity of 15%. But no such threshold exists and looking at the ROC curve can be highly misleading.
+
+In this case the pessimistic approach has a real rationale, which should be discussed. In summary, a more nuanced discussion of different applications for the ROC curve is needed: AUC as a single-number summary vs the curve for finding good promising thresholds.
+
+We have added to this at at the end of section 2.1:
+
+> Though we focus on the AUC throughout this paper, many times ROC analysis is used to find optimal cutoffs for predictors to give high levels of sensitivity and specificity.  The use of the linear interpolation in the ROC curve gives the false impression that varying levels of sensitivity and specificity can be achieved by that predictor.  In fact, only the observed sensitivity and specificity can be observed, other than the trivial cases where sensitivity or specificity is 1.  New samples of the same measurement may give different values, but the observed measurement can only achieve one point on that curve.   Using a step function interpolation when plotting an ROC curve more clearly shows this fact.  
+
+
+4.      Another dimension that could potentially be discussed (even if just as an outlook) is whether the recommendation on whether the discreteness of the predictor is fundamental (i.e. for gender) or only due to rounding (e.g. BMI captured to one decimal point). Interpolation should be more reasonable if in-between predictor values are at least theoretically possible.
+
+> We have added a part in the conclusion about this phenomena.
+> "Some predictors are fundamentally discrete or categorical, such as the number of different alleles at a gene or a questionnaire using Likert scales.  Others are continuous but empirically discrete either by rounding or a small set of unique values.  For predictors that are not fundamentally discrete, we believe that linear interpolation would be reasonable if unobserved values in between those observed are theoretically possible.  "
+
+Issues 1-3 should be addressed before publication, item 4 can be considered optional.
+
+

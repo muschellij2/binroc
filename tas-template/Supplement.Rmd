@@ -1,0 +1,136 @@
+---
+title: "Supplemental Material"
+output: pdf_document
+bibliography: binroc.bib
+---
+
+```{r setup, include = FALSE}
+library(knitr)
+library(kableExtra)
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  cache = TRUE,
+  message = FALSE, warning = FALSE, 
+  comment = "")
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Here we derive a more detailed derivation of the proofs, which may helpful to teaching this derivation or giving as an exercise.
+
+## Showing a full proof of the strict inequality
+
+\begin{align}
+& P(X_{i} > X_{j} | Y_{i} = 1, Y_{j} = 0) = \;\;\;\; \nonumber \\ 
+\;\;\; & \hspace{1.3em}P(X_{i} > X_{j} | Y_{i} = 1, Y_{j} = 0, X_{i} = {\bf 0}) P(X_{i} = {\bf 0} | Y_{i} = 1, Y_{j} = 0) \nonumber \\
+\;\;\; &\,+ P(X_{i} > X_{j} | Y_{i} = 1, Y_{j} = 0, X_{i} = {\bf 1}) P(X_{i} = {\bf 1} | Y_{i} = 1, Y_{j} = 0) \nonumber \\
+\;\;\; &\,= P(X_{i} > X_{j} | Y_{i} = 1, Y_{j} = 0, X_{i} = 1) P(X_{i} = 1 | Y_{i} = 1, Y_{j} = 0) \label{eq:expand_supp}
+\end{align}
+
+as $P(X_{i} > X_{j} | Y_{i} = 1, Y_{j} = 0, X_{i} = 0) = 0$ because $X_{i}$ and $X_{j}$ are in $\{0, 1\}$. We see that  $P(X_{i} = 1 | Y_{i} = 1, Y_{j} = 0)$ in equation \eqref{eq:expand_supp} is the sensitivity by independence:
+
+\begin{align*}
+P(X_{i} = 1 | Y_{i} = 1, Y_{j} = 0) &= P(X_{i} = 1 | Y_{i} = 1) \\
+&= \frac{TP}{TP + FN} \\
+&= \text{sensitivity}
+\end{align*}
+
+and that $P(X_{i} > X_{j} | Y_{i} = 1, Y_{j} = 0, X_{i} = 1)$ in equation \eqref{eq:expand_supp} is the specificity:
+
+\begin{align*}
+& P(X_{i} > X_{j} | Y_{i} = 1, Y_{j} = 0, X_{i} = 1) =  \\
+& \hspace{1.3em}P(X_{i} > X_{j} | Y_{i} = 1, Y_{j} = 0, X_{i} = 1, X_{j} = {\bf 1}) P(X_{j} = {\bf 1} | Y_{i} = 1, Y_{j} = 0, X_{i} = 1) \\
+&+ P(X_{i} > X_{j} | Y_{i} = 1, Y_{j} = 0, X_{i} = 1, X_{j} = {\bf 0}) P(X_{j} = {\bf 0} | Y_{i} = 1, Y_{j} = 0, X_{i} = 1) \\
+&= P(X_{i} > X_{j} | Y_{i} = 1, Y_{j} = 0, X_{i} = 1, X_{j} = 0) P(X_{j} = 0 | Y_{i} = 1, Y_{j} = 0, X_{i} = 1) \\
+&= P(X_{j} = 0 | Y_{i} = 1, Y_{j} = 0, X_{i} = 1) \\
+&= P(X_{j} = 0 | Y_{j} = 0)\\
+&= \frac{TN}{TN + FP} \\
+&= \text{specificity}
+\end{align*}
+
+as the first probability is zero as $X_{i} = X_{j} = 1$.  We combine these two to show that equation \eqref{eq:expand_supp} reduces to:
+
+$$
+P(X_{i} > X_{j} | Y_{i} = 1, Y_{j} = 0) = \text{specificity} \times \text{sensitivity}
+$$
+
+Thus, using the definition as $P(X_{i} > X_{j} | Y_{i} = 1, Y_{j} = 0)$, the AUC of a binary predictor is simply the sensitivity times the specificity.
+
+
+## Showing a the additional ties
+
+\begin{align*}
+P(X_{i} = X_{j} | Y_{i} = 1, Y_{j} = 0) &= P(X_{i} = X_{j} | Y_{i} = 1, Y_{j} = 0, X_{i} = {\bf 1}, X_{j} = {\bf 1}) \\
+&+ P(X_{i} = X_{j} | Y_{i} = 1, Y_{j} = 0, X_{i} = {\bf 0}, X_{j} = {\bf 0}) \\
+&= P(X_{i} = {\bf 1} | Y_{i} = 1) P(X_{j} = {\bf 1} | Y_{j} = 0) \\
+&+ P(X_{i} = {\bf 0} | Y_{i} = 1) P(X_{j} = {\bf 0} | Y_{j} = 0) \\
+&= \left(\text{sensitivity} \times (1 - \text{specificity})\right) \\
+&+ \left((1- \text{sensitivity}) \times \text{specificity}\right)
+\end{align*}
+
+
+## A more extreme example of differences with categorical variables
+
+We can make a more extreme (yet contrived) example than the categorical example we presented before.  Let us say we have 20000 samples in the data set and we have a binary predictor with the a distribution against the outcome as in Table \ref{tab:extreme_bin_tab}.
+
+```{r, eval = TRUE, echo = FALSE}
+library(ROCR)
+new_tab = cbind(c(5800, 10000-5800),
+                c(3800, 10000-3800))
+rownames(new_tab) = c(0, 1)
+colnames(new_tab) = c(0, 1)
+```
+
+```{r extreme_bin_tab, echo = FALSE}
+knitr::kable(new_tab, 
+             caption = "A simple 2x2 table of a binary predictor (rows) versus a binary outcome (columns)", valign = "ht") %>% 
+  kableExtra::kable_styling(position = "center")
+```
+
+```{r, eval = TRUE, echo = FALSE}
+make_vec = function(cat_tab) {
+  rownames(cat_tab) = 1:nrow(cat_tab)
+  colnames(cat_tab) = c(0, 1)  
+  xx <- rep(rep(rownames(cat_tab), ncol(cat_tab)), c(cat_tab))
+  xx = as.numeric(xx)
+  yy <- rep(colnames(cat_tab), colSums(cat_tab))
+  yy = as.numeric(yy)
+  ttab = table(xx, yy)
+  stopifnot(all(ttab == cat_tab))
+  return(list(x = xx, y = yy))
+}
+
+
+ndiv = 20
+tt = new_tab/ndiv
+long_mat = rbind(
+  matrix(rep(tt[1,], ndiv), nrow = ndiv, byrow = TRUE),
+  matrix(rep(tt[2,], ndiv), nrow = ndiv, byrow = TRUE)
+)
+u = unique(sort(round(runif(ndiv * 2*5), 4)))
+rownames(long_mat) = sort(sample(u, size = ndiv * 2))
+colnames(long_mat) = c(0, 1)
+```
+
+Let us assume we have a continuous predictor (e.g. age), but only had `r ndiv` unique values observed, so we can also consider it empirically discrete.  Here we see the frequency table in Table \ref{tab:extreme_contin_tab}.
+
+```{r extreme_contin_tab, echo = FALSE}
+knitr::kable(long_mat, 
+             caption = "A simple 2x2 table of a discrete predictor (rows) versus a binary outcome (columns)", valign = "ht") %>% 
+  kableExtra::kable_styling(position = "center")
+```
+
+When we create the ROC curves, they have identical curves when accounting for ties (black).  The red and blue lines represents the ROC curves for the pessimistic estimation for the binary (red) and continuous though discrete (blue) variables.  We see they give vastly different results.  As the continuous predictor can actually achieve sensitivity/specificity combinations on the black line, it may make more sense using the linear interpolation, but he pessimistic approach ROC curve is similar. 
+
+```{r plotter, echo = FALSE, fig.width=10, fig.height=5, fig.cap = "ROC curve of the data in the binary versus extreme categorical variable."}
+bin = make_vec(new_tab)
+lbin = make_vec(long_mat)
+
+pred = prediction(cbind(bin$x, lbin$x), cbind(lbin$y, lbin$y))
+perf = performance(pred, "tpr", "fpr")
+
+plot(perf@x.values[[1]], perf@y.values[[1]], type = 'l',
+     xlab = "False positive rate", ylab = "True positive rate", lwd = 2.5)
+lines(perf@x.values[[2]], perf@y.values[[2]], col = "deepskyblue3", type = "s", lwd = 2)
+lines(perf@x.values[[1]], perf@y.values[[1]], col = "red", type = "s", lwd = 2.5)
+points(perf@x.values[[2]], perf@y.values[[2]], col = "blue", pch = 16)
+```
